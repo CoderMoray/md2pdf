@@ -4,6 +4,20 @@
   "description": "将 Markdown 文档渲染为排版精美的 PDF 文件。管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），输出效果与浏览器预览一致。",
   "author": "CoderMoray",
   "version": "1.0.0",
-  "tags": ["文档处理", "PDF生成", "document-conversion", "markdown", "pdf"],
-  "category": "utility"
+  "license": "MIT",
+  "tags": [
+    "文档处理",
+    "PDF生成",
+    "document-conversion",
+    "markdown",
+    "pdf"
+  ],
+  "category": "utility",
+  "platforms": [
+    "cursor",
+    "windsurf",
+    "codebuddy",
+    "cline"
+  ],
+  "homepage": "https://github.com/CoderMoray/md2pdf"
 }

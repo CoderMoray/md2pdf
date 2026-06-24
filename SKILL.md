@@ -6,7 +6,7 @@ description: |
   将 Markdown 文档渲染为排版精美的 PDF 文件。
   管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
   输出效果与浏览器预览一致，支持 emoji/中文/表格/代码块。
-author: HaluCatch Team
+author: CoderMoray
 version: "1.0.0"
 tags:
   - "文档处理"

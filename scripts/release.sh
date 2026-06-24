@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# release.sh — md2pdf 一键发布脚本
+set -euo pipefail
+
+VERSION="${1:-}"
+if [[ -z "$VERSION" ]]; then
+  echo "用法: $0 <X.Y.Z> [--skip-github] [--skip-clawhub] [--skip-skillhub] [--dry-run]"
+  exit 1
+fi
+
+SKIP_GITHUB=false
+SKIP_CLAWHUB=false
+SKIP_SKILLHUB=false
+DRY_RUN=false
+
+for arg in "${@:2}"; do
+  case "$arg" in
+    --skip-github)   SKIP_GITHUB=true ;;
+    --skip-clawhub)  SKIP_CLAWHUB=true ;;
+    --skip-skillhub) SKIP_SKILLHUB=true ;;
+    --dry-run)       DRY_RUN=true ;;
+    *) echo "未知参数: $arg"; exit 1 ;;
+  esac
+done
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SCRIPTS="$ROOT/scripts"
+
+echo "🚀 md2pdf 发布 v$VERSION"
+[[ "$DRY_RUN" == "true" ]] && echo "⚠️  DRY-RUN 模式（不实际发布）"
+echo ""
+
+# ── Step 1: Bump Version ────────────────────────────────────────────
+echo "[1/7] 升级版本号..."
+bash "$SCRIPTS/bump-version.sh" "$VERSION"
+
+# ── Step 2: Lint ────────────────────────────────────────────────────
+echo "[2/7] 发布前自检..."
+bash "$SCRIPTS/lint-paths.sh"
+
+# ── Step 3: Build SkillHub Package ──────────────────────────────────
+echo "[3/7] 构建 SkillHub 包..."
+bash "$SCRIPTS/build-skillhub.sh"
+
+# ── Step 4: Check File Size ─────────────────────────────────────────
+echo "[4/7] 文件尺寸检查..."
+bash "$SCRIPTS/check-file-size.sh"
+
+# ── Step 5: Publish ─────────────────────────────────────────────────
+ZIP_PATH="$ROOT/releases/md2pdf-${VERSION}-skillhub.zip"
+
+if [[ "$DRY_RUN" == "true" ]]; then
+  echo "[5/7] DRY-RUN: 跳过发布"
+  echo "  将发布到: ClawHub, SkillHub"
+else
+  echo "[5/7] 发布到 SkillHub..."
+  if [[ "$SKIP_SKILLHUB" == "false" ]]; then
+    skillhub publish "$ZIP_PATH" || echo "⚠️  SkillHub 发布失败（可手动重试）"
+  else
+    echo "  ⏭️  跳过 SkillHub"
+  fi
+
+  echo "[6/7] 发布到 ClawHub..."
+  if [[ "$SKIP_CLAWHUB" == "false" ]]; then
+    (cd "$ROOT" && clawhub publish . --version "$VERSION") || echo "⚠️  ClawHub 发布失败（可手动重试）"
+  else
+    echo "  ⏭️  跳过 ClawHub"
+  fi
+fi
+
+# ── Step 6: Git Commit + Tag + Push ──────────────────────────────────
+echo "[7/7] Git 提交 + Tag + Push..."
+if [[ "$DRY_RUN" == "true" ]]; then
+  echo "  DRY-RUN: 跳过 git 操作"
+elif [[ "$SKIP_GITHUB" == "false" ]]; then
+  git add -A
+  git commit -m "release: v$VERSION"
+  git tag "v$VERSION"
+  git push origin "v$VERSION"
+  git push origin main
+  echo "  ✅ 已推送, GitHub Actions 将自动创建 Release"
+else
+  git add -A
+  git commit -m "release: v$VERSION"
+  git tag "v$VERSION"
+  echo "  ⚠️  跳过 git push（需手动: git push origin v$VERSION && git push origin main）"
+fi
+
+echo ""
+echo "✅ md2pdf v$VERSION 发布完成"

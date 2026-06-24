@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Lint
+        run: bash scripts/lint-paths.sh --strict
+
+      - name: Build SkillHub Package
+        run: bash scripts/build-skillhub.sh
+
+      - name: Build GitHub Release Package
+        run: |
+          zip -r "md2pdf-${{ github.ref_name }}-full.zip" \
+            SKILL.md scripts/md2pdf.py README.md LICENSE \
+            docs/CHANGELOG.md -x "*.pyc" "__pycache__/*"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "md2pdf ${{ github.ref_name }}"
+          body: "详见 [CHANGELOG.md](docs/CHANGELOG.md)"
+          files: |
+            releases/md2pdf-*-skillhub.zip
+            md2pdf-${{ github.ref_name }}-full.zip
+          draft: false
+          prerelease: false

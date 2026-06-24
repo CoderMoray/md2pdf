@@ -1,0 +1,12 @@
+tests/
+docs/
+reports/
+scripts/
+.codebuddy/
+.vscode/
+.idea/
+.workbuddy/
+__pycache__/
+*.pyc
+.git/
+*.zip
