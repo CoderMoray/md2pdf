@@ -358,11 +358,11 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
         if cover_html.strip():
             html = html.replace("<body>", f"<body>\n{cover_html}")
 
-    # 目录 nav：添加行内分页（page-break-before 确保从新页开始，page-break-after 确保内容换页）
+    # 目录 nav：添加 page-break-after:always（封面已 break → TOC 自然从第 2 页开始）
     if with_toc:
         html = html.replace(
             '<nav id="TOC"',
-            '<nav id="TOC" style="page-break-before:always;page-break-after:always;"',
+            '<nav id="TOC" style="page-break-after:always;"',
         )
 
     # --- Step 3: 注入 CSS 主题 ---
@@ -431,6 +431,56 @@ print('OK')
 
 
 # ============================================================
+# PDF 页面诊断
+# ============================================================
+
+def diagnose_pdf(pdf_path):
+    """分析 PDF 页数，检测异常空白页"""
+    if not os.path.isfile(pdf_path):
+        print(f"  ❌ PDF 文件不存在: {pdf_path}", file=sys.stderr)
+        return
+
+    try:
+        with open(pdf_path, 'rb') as f:
+            content = f.read()
+    except Exception as e:
+        print(f"  ❌ 无法读取 PDF: {e}", file=sys.stderr)
+        return
+
+    # 统计 /Type /Page 出现次数 = 总页数
+    page_count = content.count(b'/Type /Page')
+
+    print("=" * 55)
+    print("  📄 PDF 页面诊断")
+    print("=" * 55)
+    print(f"  文件: {pdf_path}")
+    print(f"  大小: {os.path.getsize(pdf_path) / 1024:.0f} KB")
+    print(f"  总页数: {page_count}")
+
+    # 预期的页面结构提示
+    expected_notes = []
+    if page_count >= 1:
+        expected_notes.append("P1 封面")
+    if page_count >= 2:
+        expected_notes.append("P2 目录")
+    if page_count >= 3:
+        expected_notes.append(f"P3~P{page_count} 正文")
+
+    print(f"  预期: {' → '.join(expected_notes)}")
+
+    # 检查页数合理性
+    # 封面 + 目录 + 至少 1 页内容 = 最少 3 页
+    # 如果只有 1-2 页但开启了封面+目录，说明很可能有空页合并或分页失败
+    if page_count <= 2 and expected_notes:
+        print(f"\n  ⚠️  警告: 开启了封面+目录但只有 {page_count} 页")
+        print(f"  可能原因: page-break 未生效，内容挤在同一页")
+    elif page_count <= 1:
+        print(f"\n  ⚠️  警告: 只有 {page_count} 页，请检查内容是否为空")
+    else:
+        print(f"\n  ✅ 页面结构合理")
+
+
+# ============================================================
 # CLI 入口
 # ============================================================
 
@@ -495,6 +545,8 @@ def main():
     if result["ok"]:
         size_kb = result["size"] / 1024
         print(f"✅ 转换完成: {result['output']} ({size_kb:.0f} KB)")
+        # 自动做页面诊断，检测空页等异常
+        diagnose_pdf(result["output"])
         sys.exit(0)
     else:
         print(f"❌ 转换失败: {result['error']}", file=sys.stderr)
