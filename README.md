@@ -4,7 +4,7 @@
 ![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)
 [![GitHub Release](https://img.shields.io/github/v/release/CoderMoray/md2pdf)](https://github.com/CoderMoray/md2pdf/releases)
 
-一个 CodeBuddy Skill — 把 Markdown 转成排版精美的 PDF，自动生成封面、目录、书签、页码。你只需说一句话，剩下交给 AI。
+一个 AI Agent Skill — 把 Markdown 转成排版精美的 PDF，自动生成封面、目录、书签、页码。你只需说一句话，剩下交给 AI。
 
 ## 目录
 
@@ -38,13 +38,13 @@
 npx skills add CoderMoray/md2pdf
 
 # 方式二：手动 clone 到 skills 目录
-cd .codebuddy/skills
+cd skills
 git clone https://github.com/CoderMoray/md2pdf.git
 ```
 
 ### 使用
 
-安装后在 CodeBuddy 中对 AI 说：
+安装后对 AI 说：
 
 > "把这份 report.md 转成 PDF，用学术主题"
 
@@ -145,7 +145,7 @@ python3 scripts/md2pdf.py --input doc.md --theme academic
 
 ```
 md2pdf/
-├── SKILL.md              # CodeBuddy Skill 描述
+├── SKILL.md              # AI Agent Skill 描述
 ├── scripts/md2pdf.py     # 转换引擎
 ├── themes/
 │   ├── default.css       # 默认主题
