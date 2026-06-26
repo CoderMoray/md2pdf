@@ -218,3 +218,19 @@ nav#TOC a::after {
     margin-left: 30mm;
     margin-right: 25mm;
 }
+
+/* ════════════════════════════════════════════════════════════
+   分页保护 — 防止内容被截断到两页
+   ════════════════════════════════════════════════════════════ */
+h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+}
+pre, table, blockquote, img, svg, .mermaid {
+    page-break-inside: avoid;
+}
+.md2pdf-cover {
+    page-break-after: always;
+}
+nav#TOC {
+    page-break-after: always;
+}

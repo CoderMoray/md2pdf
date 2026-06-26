@@ -139,3 +139,20 @@ nav#TOC a:hover {
     margin-left: 20mm;
     margin-right: 20mm;
 }
+
+/* ════════════════════════════════════════════════════════════
+   分页保护 — 防止内容被截断到两页
+   ════════════════════════════════════════════════════════════ */
+h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+}
+pre, table, blockquote, img, svg, .mermaid {
+    page-break-inside: avoid;
+}
+/* 封面和目录各自独占一页 */
+.md2pdf-cover {
+    page-break-after: always;
+}
+nav#TOC {
+    page-break-after: always;
+}

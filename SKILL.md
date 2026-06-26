@@ -7,7 +7,7 @@ description: |
   管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
   支持封面、目录、PDF 书签、页码和多主题。
 author: CoderMoray
-version: "1.3.1"
+version: "1.3.2"
 tags:
   - "文档处理"
   - "PDF生成"
@@ -122,7 +122,7 @@ title: "文档标题"
 subtitle: "副标题（可选）"
 author: "作者名"
 date: "2026-06-26"
-version: "1.3.1"
+version: "1.3.2"
 ---
 ```
 
@@ -249,6 +249,7 @@ python3 scripts/md2pdf.py --input doc.md --katex --mermaid
 - PDF 书签（outline）让阅读器侧边栏可交互跳转
 - Mermaid.js 首次自动下载并本地缓存，后续离线可用
 - 无 front-matter 时封面自动用文件名，不会出现空白页
+- 分页保护：代码块/表格/引用/图表保持完整，标题不孤行
 - 结果可复现：同一份 MD 每次输出完全相同的 PDF
 
 ### PDF 交互特性
