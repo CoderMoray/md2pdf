@@ -102,8 +102,8 @@ version: "1.0"
 
 | 组件 | 用途 | 大小 |
 |------|------|------|
-| pandoc | Markdown → HTML | ~30 MB |
-| Playwright + Chromium | HTML → PDF | ~180 MB |
+| pandoc | Markdown → HTML | ~35 MB |
+| Playwright + Chromium headless | HTML → PDF | ~190 MB |
 
 ```bash
 brew install pandoc
@@ -176,7 +176,7 @@ Markdown → pandoc (--toc) → HTML → Playwright/Chromium → PDF
 
 | 特性 | md2pdf | any2pdf |
 |------|:---:|:---:|
-| 安装体积 | ~210 MB | ~10 MB |
+| 安装体积 | ~225 MB | ~10 MB |
 | 中文支持 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | 代码高亮 | ⭐⭐⭐ | ⭐⭐ |
 | 封面/目录/书签 | ✅ | ✅ |
