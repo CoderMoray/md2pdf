@@ -116,7 +116,7 @@ def list_themes():
 
 def build_cover_html(meta):
     """根据 front-matter 元数据生成封面页 HTML"""
-    parts = ['<div class="md2pdf-cover">']
+    parts = ['<div class="md2pdf-cover" style="page-break-after:always;">']
 
     title = meta.get("title", "")
     if title:
@@ -348,36 +348,21 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
         os.unlink(html_path)
         return {"ok": False, "error": f"pandoc 转换失败:\n{pandoc_proc.stderr}"}
 
-    # --- Step 2: 注入封面 HTML + 显式分页符 ---
+    # --- Step 2: 注入封面 + 分页控制 ---
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
 
-    # 在 <body> 开头构建注入内容
-    inject_parts = []
-
+    # 封面：在 <body> 开头注入（封面自带 page-break-after:always 行内样式）
     if with_cover:
         cover_html = build_cover_html(meta)
         if cover_html.strip():
-            inject_parts.append(cover_html)
-            # 封面后显式分页（避免 CSS page-break 在 Chromium 中的渲染 quirks）
-            inject_parts.append('<div style="page-break-before: always;"></div>')
+            html = html.replace("<body>", f"<body>\n{cover_html}")
 
-    # 如果生成了目录，在目录后也加显式分页
+    # 目录 nav：添加行内分页（page-break-before 确保从新页开始，page-break-after 确保内容换页）
     if with_toc:
-        # 用不可见分隔标记，之后替换为分页
-        inject_parts.append('<!-- MD2PDF_TOC_PAGE_BREAK -->')
-
-    inject_html = "\n".join(inject_parts)
-    if inject_html:
-        html = html.replace("<body>", f"<body>\n{inject_html}")
-
-    # 如果启用了目录，在 pandoc 生成的 TOC nav 后插入分页
-    if with_toc:
-        html = html.replace('<!-- MD2PDF_TOC_PAGE_BREAK -->', '')
         html = html.replace(
-            '</nav>',
-            '</nav><div style="page-break-before: always;"></div>',
-            1,  # 只替换第一个 </nav>（即 TOC 的）
+            '<nav id="TOC"',
+            '<nav id="TOC" style="page-break-before:always;page-break-after:always;"',
         )
 
     # --- Step 3: 注入 CSS 主题 ---
