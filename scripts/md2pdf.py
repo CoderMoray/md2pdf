@@ -5,15 +5,27 @@ md2pdf — Markdown → PDF 转换引擎
 将 Markdown 文件渲染为排版精美的 PDF。
 使用 pandoc（Markdown → HTML）+ Playwright（HTML → PDF）管线。
 
+支持：
+  - 封面页（从 YAML front-matter 自动生成）
+  - 可交互目录（pandoc --toc + PDF 侧边栏书签）
+  - 页码
+  - 多主题
+
 Usage:
-  md2pdf.py --input doc.md --output doc.pdf            # 基本转换
-  md2pdf.py --input doc.md --output doc.pdf --font-size 16   # 自定义字号
-  md2pdf.py --validate                                   # 环境检测
-  md2pdf.py --input doc.md --output doc.pdf --page-size A3   # 自定义纸张
+  md2pdf.py --input doc.md                           # 基本转换
+  md2pdf.py --input doc.md --output doc.pdf           # 指定输出
+  md2pdf.py --input doc.md --font-size 16             # 自定义字号
+  md2pdf.py --input doc.md --page-size A3             # 自定义纸张
+  md2pdf.py --input doc.md --theme academic           # 切换主题
+  md2pdf.py --input doc.md --no-cover --no-toc        # 无封面/目录
+  md2pdf.py --input doc.md --toc-depth 2              # 目录深度
+  md2pdf.py --validate                                 # 环境检测
 """
 
 import argparse
+import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -21,42 +33,140 @@ import tempfile
 
 
 # ============================================================
-# CSS 样式（内置，不依赖外部文件）
+# 路径
 # ============================================================
 
-STYLE_CSS = """
-body {
-    font-family: -apple-system, "PingFang SC", "Heiti SC", sans-serif;
-    font-size: 14px;
-    line-height: 1.8;
-    color: #1d1d1f;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 40px;
-}
-h1 { font-size: 24px; font-weight: 700; margin-top: 32px; margin-bottom: 16px; }
-h2 { font-size: 19px; font-weight: 600; margin-top: 28px; margin-bottom: 12px;
-     padding-bottom: 6px; border-bottom: 1px solid #e5e5ea; }
-h3 { font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 8px; }
-h4 { font-size: 15px; font-weight: 600; margin-top: 20px; margin-bottom: 6px; }
-p { margin: 8px 0; }
-ul, ol { margin: 8px 0; padding-left: 24px; }
-li { margin: 6px 0; line-height: 1.7; }
-li p { margin: 2px 0; }
-table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
-th, td { border: 1px solid #d1d1d6; padding: 8px 12px; text-align: left; }
-th { background: #f5f5f7; font-weight: 600; }
-code { background: #f5f5f7; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-pre { background: #f5f5f7; padding: 16px; border-radius: 8px; overflow-x: auto;
-      font-size: 12px; line-height: 1.5; margin: 12px 0; }
-blockquote { border-left: 3px solid #007aff; margin: 12px 0; padding: 8px 16px;
-             background: #f5f5f7; border-radius: 0 8px 8px 0; }
-blockquote p { margin: 4px 0; }
-hr { border: none; border-top: 1px solid #e5e5ea; margin: 24px 0; }
-strong { font-weight: 700; }
-img { max-width: 100%; height: auto; }
-code { font-family: "SF Mono", "Menlo", "Consolas", monospace; }
-"""
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
+THEMES_DIR = os.path.join(PROJECT_DIR, "themes")
+
+
+# ============================================================
+# Front-matter 解析（纯正则，无外部依赖）
+# ============================================================
+
+def parse_front_matter(text):
+    """从 Markdown 文本中解析 YAML front-matter，返回 (meta, body)。"""
+    meta = {}
+    body = text
+
+    m = re.match(r'^---\s*\n(.*?)\n---\s*\n', text, re.DOTALL)
+    if m:
+        raw = m.group(1)
+        body = text[m.end():]
+        for line in raw.splitlines():
+            line = line.strip()
+            kv = re.match(r'^(\w[\w_-]*)\s*:\s*(.+)$', line)
+            if kv:
+                key = kv.group(1)
+                val = kv.group(2).strip().strip('"').strip("'")
+                meta[key] = val
+
+    return meta, body
+
+
+# ============================================================
+# 主题管理
+# ============================================================
+
+AVAILABLE_THEMES = {}
+
+def _scan_themes():
+    """扫描 themes/ 目录获取可用主题列表"""
+    global AVAILABLE_THEMES
+    if not os.path.isdir(THEMES_DIR):
+        AVAILABLE_THEMES = {}
+        return
+    for f in os.listdir(THEMES_DIR):
+        if f.endswith(".css"):
+            name = f[:-4]
+            AVAILABLE_THEMES[name] = os.path.join(THEMES_DIR, f)
+
+_scan_themes()
+
+
+def load_theme_css(theme_name, font_size=None):
+    """加载主题 CSS，可选覆盖字号"""
+    if theme_name not in AVAILABLE_THEMES:
+        print(f"⚠️  主题 '{theme_name}' 不存在，使用 default")
+        theme_name = "default"
+
+    path = AVAILABLE_THEMES.get(theme_name)
+    if not path:
+        return ""
+
+    with open(path, "r", encoding="utf-8") as f:
+        css = f.read()
+
+    if font_size:
+        css = re.sub(r'font-size:\s*14px;', f'font-size: {font_size}px;', css)
+        css = re.sub(r'font-size:\s*14pt;', f'font-size: {font_size}pt;', css)
+
+    return css
+
+
+def list_themes():
+    """返回可用主题列表"""
+    return sorted(AVAILABLE_THEMES.keys())
+
+
+# ============================================================
+# 封面页生成
+# ============================================================
+
+def build_cover_html(meta):
+    """根据 front-matter 元数据生成封面页 HTML"""
+    parts = ['<div class="md2pdf-cover">']
+
+    title = meta.get("title", "")
+    if title:
+        parts.append(f'<h1>{_escape_html(title)}</h1>')
+
+    subtitle = meta.get("subtitle", "")
+    if subtitle:
+        parts.append(f'<p class="subtitle">{_escape_html(subtitle)}</p>')
+
+    parts.append('<hr>')
+
+    author = meta.get("author", "")
+    if author:
+        parts.append(f'<p class="meta">{_escape_html(author)}</p>')
+
+    date = meta.get("date", "")
+    if date:
+        parts.append(f'<p class="meta">{_escape_html(date)}</p>')
+
+    version = meta.get("version", "")
+    if version:
+        parts.append(f'<p class="version">v{_escape_html(version)}</p>')
+
+    parts.append('</div>')
+    return "\n".join(parts)
+
+
+def _escape_html(text):
+    """简单的 HTML 转义"""
+    return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+# ============================================================
+# 页码页脚 HTML
+# ============================================================
+
+def build_footer_html():
+    """Playwright footerTemplate — 居中页码"""
+    return """
+    <div style="
+        width: 100%;
+        text-align: center;
+        font-size: 9px;
+        color: #8e8e93;
+        font-family: -apple-system, 'PingFang SC', sans-serif;
+        padding: 0 20mm;
+    ">
+        <span class="pageNumber"></span>
+    </div>
+    """
 
 
 # ============================================================
@@ -64,7 +174,6 @@ code { font-family: "SF Mono", "Menlo", "Consolas", monospace; }
 # ============================================================
 
 def check_pandoc():
-    """检查 pandoc 是否可用"""
     path = shutil.which("pandoc")
     if path:
         result = subprocess.run(["pandoc", "--version"], capture_output=True, text=True, timeout=10)
@@ -74,15 +183,12 @@ def check_pandoc():
 
 
 def check_playwright():
-    """检查 playwright 是否可用（通过 miniconda 或系统 Python）"""
-    # 先找系统 playwright 命令
     playwright_cmd = shutil.which("playwright")
     if playwright_cmd:
         result = subprocess.run([playwright_cmd, "--version"], capture_output=True, text=True, timeout=10)
         version = result.stdout.strip() if result.stdout else "unknown"
         return {"available": True, "path": playwright_cmd, "version": version}
 
-    # 尝试通过 Python 检测
     for python_candidate in [
         "/opt/homebrew/Caskroom/miniconda/base/bin/python3",
         "/usr/bin/python3",
@@ -100,8 +206,6 @@ def check_playwright():
 
 
 def check_chromium():
-    """检查 Chromium 浏览器是否已安装"""
-    import tempfile
     probe_code = """
 import sys
 from playwright.sync_api import sync_playwright
@@ -114,27 +218,22 @@ except Exception as e:
     print(f'FAIL: {e}', file=sys.stderr)
     sys.exit(1)
 """
-    try:
-        for python_candidate in _find_python_with_playwright():
-            result = subprocess.run(
-                [python_candidate, "-c", probe_code.strip()],
-                capture_output=True, text=True, timeout=30,
-            )
-            if result.returncode == 0:
-                return {"available": True, "detail": "Chromium 可用"}
-            elif "executable doesn't exist" in result.stderr:
-                return {"available": False, "detail": "Chromium 未安装，运行 playwright install chromium"}
-            else:
-                return {"available": False, "detail": (result.stderr.strip() or result.stdout.strip())[:200]}
-    except Exception as e:
-        return {"available": False, "detail": str(e)}
+    for python_candidate in _find_python_with_playwright():
+        result = subprocess.run(
+            [python_candidate, "-c", probe_code.strip()],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode == 0:
+            return {"available": True, "detail": "Chromium 可用"}
+        elif "executable doesn't exist" in result.stderr:
+            return {"available": False, "detail": "Chromium 未安装，运行 playwright install chromium"}
+        else:
+            return {"available": False, "detail": (result.stderr.strip() or result.stdout.strip())[:200]}
     return {"available": False, "detail": "无法找到可用的 Python 环境"}
 
 
 def _find_python_with_playwright():
-    """查找安装了 playwright 的 Python"""
     candidates = []
-    # 已知的候选路径
     for p in [
         "/opt/homebrew/Caskroom/miniconda/base/bin/python3",
         "/opt/homebrew/bin/python3",
@@ -147,12 +246,10 @@ def _find_python_with_playwright():
 
 
 def run_validate():
-    """执行环境检测"""
     print("=" * 55)
     print("  md2pdf — 环境检测")
     print("=" * 55)
 
-    # pandoc
     pc = check_pandoc()
     if pc["available"]:
         print(f"  ✅ pandoc: {pc['version']}")
@@ -161,7 +258,6 @@ def run_validate():
         print("  ❌ pandoc: 未找到")
         print("    安装: brew install pandoc")
 
-    # playwright
     pw = check_playwright()
     if pw["available"]:
         print(f"  ✅ Playwright: {pw['version']}")
@@ -170,7 +266,6 @@ def run_validate():
         print("  ❌ Playwright: 未找到")
         print("    安装: pip install playwright && playwright install chromium")
 
-    # chromium
     if pw["available"]:
         cr = check_chromium()
         if cr["available"]:
@@ -180,7 +275,12 @@ def run_validate():
     else:
         print("  ⚠️ Chromium: 跳过（Playwright 不可用）")
 
-    # 结论
+    themes = list_themes()
+    if themes:
+        print(f"\n  🎨 可用主题: {', '.join(themes)}")
+    else:
+        print("\n  ⚠️ 未找到主题文件")
+
     all_ok = pc["available"] and pw["available"] and cr["available"] if pw["available"] else False
     if all_ok:
         print("\n  🟢 环境就绪，可以转换。")
@@ -194,7 +294,6 @@ def run_validate():
 # ============================================================
 
 def find_python_executable():
-    """找一个可用的、安装了 playwright 的 Python"""
     for python_path in _find_python_with_playwright():
         result = subprocess.run(
             [python_path, "-c", "from playwright.sync_api import sync_playwright; print('ok')"],
@@ -205,63 +304,88 @@ def find_python_executable():
     return None
 
 
-def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None):
+def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
+              theme="default", with_cover=True, with_toc=True, toc_depth=4):
     """
     Markdown → PDF 转换管线。
 
-    管线: Markdown → (pandoc) → HTML → (Playwright) → PDF
+    管线: Markdown → 解析 front-matter → pandoc (--toc) →
+          注入封面 HTML → 注入 CSS 主题 → Playwright PDF (outline + 页码)
     """
 
     # --- 输入验证 ---
     if not os.path.isfile(md_path):
         return {"ok": False, "error": f"输入文件不存在: {md_path}"}
 
-    md_dir = os.path.dirname(os.path.abspath(md_path))
-    md_name = os.path.basename(md_path)
+    # --- 读取并解析 Markdown ---
+    with open(md_path, "r", encoding="utf-8") as f:
+        raw_text = f.read()
+
+    meta, body = parse_front_matter(raw_text)
 
     # --- Step 1: pandoc MD → HTML ---
-    css = STYLE_CSS
-    if font_size:
-        css = css.replace("font-size: 14px;", f"font-size: {font_size}px;")
+    # 注意：front-matter 已剥离，pandoc 不会自动生成标题块
+    pandoc_args = [
+        "pandoc",
+        "-f", "commonmark_x",
+        "-t", "html5",
+        "--self-contained",
+    ]
+
+    if with_toc:
+        pandoc_args.extend(["--toc", f"--toc-depth={toc_depth}"])
 
     with tempfile.NamedTemporaryFile(suffix=".html", delete=False, mode="w", encoding="utf-8") as f:
         html_path = f.name
 
-    pandoc_result = subprocess.run(
-        ["pandoc", md_path,
-         "-f", "commonmark_x",
-         "-t", "html5",
-         "--self-contained",
-         "-o", html_path],
+    pandoc_proc = subprocess.run(
+        pandoc_args + ["-o", html_path],
+        input=body,
         capture_output=True, text=True, timeout=60,
     )
 
-    if pandoc_result.returncode != 0:
+    if pandoc_proc.returncode != 0:
         os.unlink(html_path)
-        return {"ok": False, "error": f"pandoc 转换失败:\n{pandoc_result.stderr}"}
+        return {"ok": False, "error": f"pandoc 转换失败:\n{pandoc_proc.stderr}"}
 
-    # --- Step 2: 注入 CSS ---
+    # --- Step 2: 注入封面 HTML ---
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
 
-    html = html.replace("</head>", f"<style>{css}</style></head>")
+    inject_bits = []
+    if with_cover:
+        cover_html = build_cover_html(meta)
+        if cover_html.strip():
+            inject_bits.append(cover_html)
+
+    inject_html = "\n".join(inject_bits)
+    if inject_html:
+        html = html.replace("<body>", f"<body>\n{inject_html}")
+
+    # --- Step 3: 注入 CSS 主题 ---
+    css = load_theme_css(theme, font_size)
+    if css:
+        html = html.replace("</head>", f"<style>{css}</style></head>")
 
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
 
-    # --- Step 3: Playwright HTML → PDF ---
+    # --- Step 4: Playwright HTML → PDF ---
     python_exec = find_python_executable()
     if not python_exec:
         os.unlink(html_path)
         return {"ok": False, "error": "未找到安装了 Playwright 的 Python 环境"}
 
+    # 纸张大小映射
     page_size_map = {
         "A4": "format='A4'",
         "A3": "format='A3'",
         "letter": "format='Letter'",
         "legal": "format='Legal'",
     }
-    pdf_kwargs_str = page_size_map.get(page_size or "A4", "format='A4'")
+    pdf_options = page_size_map.get(page_size or "A4", "format='A4'")
+
+    footer_html = build_footer_html()
 
     code = f"""
 import sys
@@ -273,7 +397,14 @@ with sync_playwright() as p:
     page = browser.new_page()
     page.goto('file://' + html_path)
     page.wait_for_load_state('networkidle')
-    page.pdf(path=pdf_path, {pdf_kwargs_str}, margin={{"top": "20mm", "bottom": "20mm", "left": "20mm", "right": "20mm"}})
+    page.pdf(
+        path=pdf_path,
+        {pdf_options},
+        outline=True,                # 生成 PDF 侧边栏书签
+        displayHeaderFooter=True,     # 显示页眉页脚
+        footerTemplate={repr(footer_html)},
+        margin={{"top": "20mm", "bottom": "20mm", "left": "20mm", "right": "20mm"}},
+    )
     browser.close()
 print('OK')
 """
@@ -300,6 +431,8 @@ print('OK')
 # ============================================================
 
 def main():
+    themes_list = list_themes() or ["default"]
+
     parser = argparse.ArgumentParser(
         description="md2pdf — Markdown 转 PDF（pandoc + Playwright 引擎）",
     )
@@ -309,6 +442,18 @@ def main():
     parser.add_argument("--font-size", type=int, default=None, help="正文字号（px），默认 14")
     parser.add_argument("--page-size", default="A4", choices=["A4", "A3", "letter", "legal"],
                         help="纸张大小，默认 A4")
+    parser.add_argument("--theme", default="default", choices=themes_list,
+                        help=f"主题，默认 default。可用: {', '.join(themes_list)}")
+    parser.add_argument("--cover", action="store_true", default=True,
+                        help="生成封面页（从 front-matter 自动生成，默认开启）")
+    parser.add_argument("--no-cover", action="store_false", dest="cover",
+                        help="不生成封面页")
+    parser.add_argument("--toc", action="store_true", default=True,
+                        help="生成目录（默认开启）")
+    parser.add_argument("--no-toc", action="store_false", dest="toc",
+                        help="不生成目录")
+    parser.add_argument("--toc-depth", type=int, default=4, choices=range(1, 7),
+                        help="目录深度（标题层级 1-6），默认 4")
 
     args = parser.parse_args()
 
@@ -321,7 +466,6 @@ def main():
     if not args.input:
         parser.error("请指定 --input")
     if not args.output:
-        # 自动推断输出路径：同目录下同名 .pdf
         base = os.path.splitext(args.input)[0]
         args.output = base + ".pdf"
 
@@ -331,6 +475,10 @@ def main():
         pdf_path=args.output,
         font_size=args.font_size,
         page_size=args.page_size,
+        theme=args.theme,
+        with_cover=args.cover,
+        with_toc=args.toc,
+        toc_depth=args.toc_depth,
     )
 
     if result["ok"]:

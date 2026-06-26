@@ -31,7 +31,7 @@ jobs:
       - name: Build GitHub Release Package
         run: |
           zip -r "md2pdf-${{ github.ref_name }}-full.zip" \
-            SKILL.md scripts/md2pdf.py README.md LICENSE \
+            SKILL.md scripts/md2pdf.py themes/ README.md LICENSE \
             docs/CHANGELOG.md -x "*.pyc" "__pycache__/*"
 
       - name: Create Release

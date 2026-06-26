@@ -24,6 +24,7 @@ mkdir -p "$ROOT/releases"
 echo "  复制文件..."
 cp "$ROOT/SKILL.md" "$TMPDIR/"
 cp "$ROOT/scripts/md2pdf.py" "$TMPDIR/"
+cp -r "$ROOT/themes" "$TMPDIR/themes"
 cp "$ROOT/README.md" "$TMPDIR/"
 [[ -f "$ROOT/docs/CHANGELOG.md" ]] && cp "$ROOT/docs/CHANGELOG.md" "$TMPDIR/CHANGELOG.md"
 

@@ -5,9 +5,9 @@ name: md2pdf
 description: |
   将 Markdown 文档渲染为排版精美的 PDF 文件。
   管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
-  输出效果与浏览器预览一致，支持 emoji/中文/表格/代码块。
+  支持封面、目录、PDF 书签、页码和多主题。
 author: CoderMoray
-version: "1.0.0"
+version: "1.1.0"
 tags:
   - "文档处理"
   - "PDF生成"
@@ -26,21 +26,45 @@ category: "utility"
 | 擅长 | 不擅长 |
 |------|--------|
 | Markdown → PDF 转换 | 合并多个 MD 为单个 PDF |
-| 中文/英文/emoji/表格/代码块 | 从零创建 PDF（请先写 MD） |
-| 自定义字号和纸张大小 | 深度排版控制（如分栏、页眉页脚自定义） |
-| 环境自检（--validate） | 加密/水印/签名 PDF |
+| 封面页（从 front-matter 自动生成） | 从零创建 PDF（请先写 MD） |
+| 交互式目录 + PDF 侧边栏书签 | 分栏布局 |
+| 页码、多主题切换 | 动态页眉页脚自定义 |
+| 中文/英文/emoji/表格/代码块 | 加密/水印/签名 PDF |
+| 自定义字号和纸张大小 | 深度排版控制 |
+| 环境自检（--validate） | — |
 
 ---
 
 ## 输入
 
+### Markdown front-matter（封面数据）
+
+在 MD 文件头部使用 YAML 格式声明封面信息，所有字段均为可选：
+
+```yaml
+---
+title: "文档标题"
+subtitle: "副标题（可选）"
+author: "作者名"
+date: "2026-06-26"
+version: "1.0"
+---
+```
+
+### CLI 参数
+
 | 参数 | 是否必需 | 说明 |
 |------|---------|------|
 | `--input <path>` | ✅ | 输入 Markdown 文件路径 |
-| `--output <path>` | ❌ | 输出 PDF 路径，不指定则自动生成（同目录同名.pdf） |
+| `--output <path>` | ❌ | 输出 PDF 路径，不指定则自动生成 |
+| `--theme <name>` | ❌ | 主题：default / academic，默认 default |
+| `--cover` / `--no-cover` | ❌ | 是否生成封面页，默认开启 |
+| `--toc` / `--no-toc` | ❌ | 是否生成目录，默认开启 |
+| `--toc-depth <n>` | ❌ | 目录深度 1-6，默认 4 |
 | `--font-size <px>` | ❌ | 正文字号，默认 14px |
-| `--page-size <format>` | ❌ | 纸张大小，可选 A4/A3/letter/legal，默认 A4 |
+| `--page-size <format>` | ❌ | A4 / A3 / letter / legal，默认 A4 |
 | `--validate` | ❌ | 环境检测模式，不执行转换 |
+| `--list-themes` | ❌ | 列出可用主题 |
 
 ---
 
@@ -48,7 +72,17 @@ category: "utility"
 
 ### 第 1 步：确认需求
 
-确认用户提供的 Markdown 文件路径，确认输出需求。
+确认用户提供的 Markdown 文件路径，确认是否需要封面、目录、指定主题等。
+
+如果用户需要封面，指导其在 MD 文件头部添加 front-matter：
+
+```yaml
+---
+title: "报告标题"
+author: "作者"
+date: "2026-06-26"
+---
+```
 
 ### 第 2 步：环境检测
 
@@ -64,11 +98,12 @@ python3 scripts/md2pdf.py --validate
   md2pdf — 环境检测
 =======================================================
   ✅ pandoc: pandoc 2.12
-    路径: /opt/homebrew/Caskroom/miniconda/base/bin/pandoc
+    路径: ...
   ✅ Playwright: Version 1.56.0
-    路径: /opt/homebrew/Caskroom/miniconda/base/bin/playwright
+    路径: ...
   ✅ Chromium: 就绪
 
+  🎨 可用主题: default, academic
   🟢 环境就绪，可以转换。
 ```
 
@@ -80,13 +115,19 @@ python3 scripts/md2pdf.py --validate
 
 ```bash
 # 基本用法（AI 拼装命令后执行）
-python3 scripts/md2pdf.py --input /path/to/doc.md --output /path/to/doc.pdf
+python3 scripts/md2pdf.py --input /path/to/doc.md
 
-# 自定义字号
-python3 scripts/md2pdf.py --input doc.md --output doc.pdf --font-size 16
+# 切换主题
+python3 scripts/md2pdf.py --input doc.md --theme academic
 
-# 自定义纸张
-python3 scripts/md2pdf.py --input doc.md --output doc.pdf --page-size A3
+# 自定义封面/目录
+python3 scripts/md2pdf.py --input doc.md --no-cover --toc-depth 2
+
+# 自定义字号和纸张
+python3 scripts/md2pdf.py --input doc.md --font-size 16 --page-size A3
+
+# 无封面、无目录的简洁模式
+python3 scripts/md2pdf.py --input doc.md --no-cover --no-toc
 ```
 
 ### 第 4 步：验证输出
@@ -94,23 +135,34 @@ python3 scripts/md2pdf.py --input doc.md --output doc.pdf --page-size A3
 转换完成后确认：
 - PDF 文件已生成
 - 文件大小不为 0（一般 300KB+）
-- 打开确认排版无误
+- 封面/目录/页码是否按预期生成
+- 打开确认排版无误，侧边栏有 PDF 书签
 
 ---
 
 ## 架构
 
 ```
-管线: Markdown → (pandoc) → HTML → (Playwright/Chromium) → PDF
-         ↑                       ↑
-    commonmark_x 解析      CSS 样式注入（内置）
+管线: Markdown → 解析 front-matter → pandoc (--toc) →
+      注入封面 HTML → 注入 CSS 主题 → Playwright PDF
+         ↑                               ↑
+    commonmark_x 解析               outline + 页脚模板
 ```
 
 **为什么这样设计：**
 - pandoc 处理 Markdown 解析，不依赖 AI 理解
 - Playwright 使用真实 Chromium 浏览器渲染，输出与预览一致
-- 所有样式和逻辑内嵌在脚本中，无需 AI 判断
+- 封面/目录/页码全部由脚本自动处理，无需 AI 干预
+- PDF 书签（outline）让阅读器侧边栏可交互跳转
 - 结果可复现：同一份 MD 每次输出完全相同的 PDF
+
+### PDF 交互特性
+
+| 特性 | 说明 |
+|------|------|
+| 📑 可点击目录页 | TOC 中的条目可点击跳转到对应章节 |
+| 📌 侧边栏书签 | Playwright `outline: true` 生成 PDF 书签树 |
+| 🔢 居中页码 | 每页底部自动显示页码 |
 
 ---
 
@@ -130,4 +182,6 @@ python3 scripts/md2pdf.py --input doc.md --output doc.pdf --page-size A3
 | playwright 未安装 | `pip install playwright && playwright install chromium` |
 | 中文显示为方块 | 确认系统有中文字体（macOS 自带 PingFang） |
 | emoji 不显示 | 确认使用 `--validate` 检测到的环境正常 |
+| 封面没显示 | 确认 MD 文件头部有 `title:` 字段的 front-matter |
+| 目录为空 | 确认文档有 H1-H4 标题，或增加 `--toc-depth 6` |
 | 输出文件未生成 | 检查输出路径是否有写入权限 |
