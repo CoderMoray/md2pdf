@@ -64,8 +64,9 @@ img { max-width: 100%; height: auto; }
     justify-content: center;
     align-items: center;
     text-align: center;
-    min-height: 90vh;
+    min-height: 100vh;
     padding: 60px 40px;
+    page-break-after: always;
 }
 .md2pdf-cover h1 {
     font-size: 32px;
@@ -149,10 +150,4 @@ h1, h2, h3, h4, h5, h6 {
 pre, table, blockquote, img, svg, .mermaid {
     page-break-inside: avoid;
 }
-/* 封面和目录各自独占一页 */
-.md2pdf-cover {
-    page-break-after: always;
-}
-nav#TOC {
-    page-break-after: always;
-}
+/* 封面独占一页（page-break 在 HTML 内联样式中设置） */

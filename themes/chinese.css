@@ -1,197 +1,38 @@
 /* ============================================================
-   md2pdf — Chinese Theme
-   专为中文排版优化：禁则处理、行间距、标点调整
-   推荐配合 --font-family "Noto Serif CJK SC" 使用
+   md2pdf — Chinese Layout Layer
+   中文排版增强层：叠加到任意主题上使用
+   不影响主题的视觉风格（颜色、字体、封面等）
    ============================================================ */
 
-/* ── 基础 ── */
+/* ── 中文排版优化 ── */
 body {
-    font-family: "Noto Serif CJK SC", "Source Han Serif SC", "STSong",
-                 "PingFang SC", "Microsoft YaHei", sans-serif;
-    font-size: 14px;
     line-height: 2;
-    color: #222;
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 40px 50px;
     text-align: justify;
     letter-spacing: 0.02em;
     word-break: break-all;
     overflow-wrap: break-word;
-    /* 中文禁则处理：行首不出现标点 */
     line-break: strict;
     hanging-punctuation: first allow-end;
 }
 
-/* ── 段落 ── */
+/* ── 首行缩进 ── */
 p {
-    margin: 8px 0;
     text-indent: 2em;
     text-justify: inter-ideograph;
 }
-h1 + p, h2 + p, h3 + p, h4 + p, blockquote p, li p {
+h1 + p, h2 + p, h3 + p, h4 + p, h5 + p, h6 + p,
+blockquote p, li p, td p, th p {
     text-indent: 0;
 }
 
-/* ── 标题 ── */
-h1 {
-    font-size: 22px;
-    font-weight: 700;
-    margin-top: 28px;
-    margin-bottom: 14px;
-    letter-spacing: 0.05em;
-}
-h2 {
-    font-size: 19px;
-    font-weight: 600;
-    margin-top: 24px;
-    margin-bottom: 10px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #ddd;
-}
-h3 { font-size: 16px; font-weight: 600; margin-top: 20px; margin-bottom: 8px; }
-h4 { font-size: 15px; font-weight: 600; margin-top: 16px; margin-bottom: 6px; }
+/* ── 标题间距加大（中文排版需要更多留白） ── */
+h1 { margin-top: 28px; margin-bottom: 14px; }
+h2 { margin-top: 24px; margin-bottom: 10px; }
+h3 { margin-top: 20px; margin-bottom: 8px; }
+h4 { margin-top: 16px; margin-bottom: 6px; }
 
-/* ── 列表 ── */
-ul, ol { margin: 8px 0; padding-left: 24px; }
-li { margin: 6px 0; line-height: 1.8; }
-li p { margin: 2px 0; }
+/* ── 列表行距 ── */
+li { line-height: 1.8; }
 
-/* ── 表格 ── */
-table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 12px 0;
-    font-size: 13px;
-    background: #fff;
-}
-th, td {
-    border: 1px solid #ccc;
-    padding: 6px 10px;
-    text-align: left;
-}
-th { background: #f5f5f5; font-weight: 700; }
-
-/* ── 代码 ── */
-code {
-    font-family: "SF Mono", "Menlo", "Consolas", "Noto Sans Mono CJK SC", monospace;
-    background: #f5f5f5;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 13px;
-}
-pre {
-    background: #f5f5f5;
-    padding: 14px 16px;
-    font-size: 12px;
-    line-height: 1.5;
-    margin: 12px 0;
-    border-radius: 4px;
-    overflow-x: auto;
-}
-
-/* ── 引用 ── */
-blockquote {
-    border-left: 3px solid #333;
-    margin: 12px 0;
-    padding: 6px 14px;
-    background: #f9f9f9;
-    color: #555;
-}
+/* ── 引用块适配 ── */
 blockquote p { margin: 2px 0; }
-
-/* ── 分割线 ── */
-hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
-
-/* ── 强调 ── */
-strong { font-weight: 700; }
-em { font-style: italic; }
-
-/* ── 图片 ── */
-img { max-width: 100%; height: auto; }
-
-/* ════════════════════════════════════════════════════════════
-   封面页 — 中式简约风格
-   ════════════════════════════════════════════════════════════ */
-.md2pdf-cover {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    min-height: 90vh;
-    padding: 60px 50px;
-    background: linear-gradient(135deg, #f5f5f5 0%, #fff 100%);
-}
-.md2pdf-cover h1 {
-    font-size: 30px;
-    font-weight: 700;
-    margin: 0 0 12px 0;
-    border: none;
-    padding: 0;
-    letter-spacing: 0.08em;
-}
-.md2pdf-cover .subtitle {
-    font-size: 16px;
-    color: #888;
-    margin-bottom: 32px;
-    letter-spacing: 0.04em;
-}
-.md2pdf-cover hr {
-    width: 80px;
-    margin: 24px auto;
-    border-top: 2px solid #333;
-}
-.md2pdf-cover .meta {
-    font-size: 13px;
-    color: #666;
-    margin: 3px 0;
-}
-.md2pdf-cover .version {
-    font-size: 12px;
-    color: #aaa;
-    margin-top: 16px;
-}
-
-/* ════════════════════════════════════════════════════════════
-   目录页
-   ════════════════════════════════════════════════════════════ */
-nav#TOC {
-    padding: 20px 0;
-}
-nav#TOC h1, nav#TOC h2 {
-    font-size: 20px;
-    font-weight: 700;
-    border: none;
-    margin-bottom: 18px;
-    padding: 0;
-    letter-spacing: 0.04em;
-}
-nav#TOC ul { list-style: none; padding: 0; margin: 0; }
-nav#TOC ul ul { padding-left: 24px; }
-nav#TOC li { margin: 4px 0; line-height: 1.7; }
-nav#TOC a { color: #333; text-decoration: none; }
-nav#TOC a:hover { text-decoration: underline; }
-
-@page {
-    margin-top: 20mm;
-    margin-bottom: 20mm;
-    margin-left: 25mm;
-    margin-right: 25mm;
-}
-
-/* ════════════════════════════════════════════════════════════
-   分页保护 — 防止内容被截断到两页
-   ════════════════════════════════════════════════════════════ */
-h1, h2, h3, h4, h5, h6 {
-    page-break-after: avoid;
-}
-pre, table, blockquote, img, svg, .mermaid {
-    page-break-inside: avoid;
-}
-.md2pdf-cover {
-    page-break-after: always;
-}
-nav#TOC {
-    page-break-after: always;
-}

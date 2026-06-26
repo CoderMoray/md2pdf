@@ -89,8 +89,8 @@ def _scan_themes():
 _scan_themes()
 
 
-def load_theme_css(theme_name, font_size=None, font_family=None):
-    """加载主题 CSS，可选覆盖字号和字体"""
+def load_theme_css(theme_name, font_size=None, font_family=None, chinese_layout=False):
+    """加载主题 CSS，可选覆盖字号、字体、中文排版层"""
     if theme_name not in AVAILABLE_THEMES:
         print(f"⚠️  主题 '{theme_name}' 不存在，使用 default")
         theme_name = "default"
@@ -114,6 +114,13 @@ def load_theme_css(theme_name, font_size=None, font_family=None):
             rf'\1{font_family};',
             css,
         )
+
+    # 叠加中文排版层（chinese.css 中仅保留排版规则，不含主题色/字体等）
+    if chinese_layout:
+        chinese_css_path = os.path.join(THEMES_DIR, "chinese.css")
+        if os.path.isfile(chinese_css_path):
+            with open(chinese_css_path, "r", encoding="utf-8") as f:
+                css += "\n/* === 中文排版层 === */\n" + f.read()
 
     return css
 
@@ -428,10 +435,11 @@ def run_validate():
     else:
         print("  ⚠️  Chromium: 跳过（Playwright 不可用）")
 
-    # 主题
-    themes = list_themes()
+    # 主题（chinese 是排版层，不是主题）
+    themes = [t for t in list_themes() if t != "chinese"]
     if themes:
         print(f"\n  🎨 可用主题: {', '.join(themes)}")
+        print(f"  📐 中文排版: --chinese-layout 叠加到任意主题")
     else:
         print("\n  ⚠️ 未找到主题文件")
 
@@ -488,12 +496,12 @@ def find_python_executable():
 
 def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
               theme="default", with_cover=True, with_toc=True, toc_depth=4,
-              font_family=None, katex=False, mermaid=False):
+              font_family=None, katex=False, mermaid=False, chinese_layout=False):
     """
     Markdown → PDF 转换管线。
 
     管线: Markdown → 解析 front-matter → pandoc (--toc, --katex) →
-          注入封面 HTML → 注入 CSS 主题 → 注入 Mermaid/KaTeX → Playwright PDF
+          注入封面 HTML → 注入 CSS 主题 + 中文排版层 → 注入 Mermaid/KaTeX → Playwright PDF
     """
 
     # --- 输入验证 ---
@@ -551,8 +559,8 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
         if cover_html.strip():
             html = html.replace("<body>", f"<body>\n{cover_html}")
 
-    # --- Step 3: 注入 CSS 主题 ---
-    css = load_theme_css(theme, font_size, font_family)
+    # --- Step 3: 注入 CSS 主题 + 中文排版层 ---
+    css = load_theme_css(theme, font_size, font_family, chinese_layout)
     if css:
         html = html.replace("</head>", f"<style>{css}</style></head>")
 
@@ -639,11 +647,39 @@ import sys
 from playwright.sync_api import sync_playwright
 html_path = {repr(html_path)}
 pdf_path = {repr(pdf_path)}
+margin = 20  # mm
 with sync_playwright() as p:
     browser = p.chromium.launch()
     page = browser.new_page()
     page.goto('file://' + html_path)
-    page.wait_for_load_state('networkidle'){mermaid_wait}
+    page.wait_for_load_state('networkidle')
+    # 动态设置封面高度为页面可用高度，消除空白页
+    page.evaluate('''() => {{
+        var cover = document.querySelector('.md2pdf-cover');
+        if (!cover) return;
+        var vh = window.innerHeight;
+        cover.style.minHeight = vh + 'px';
+        cover.style.height = vh + 'px';
+        cover.style.boxSizing = 'border-box';
+    }}''')
+    page.wait_for_timeout(200)
+    # H1 智能分页：如果 H1 不在页面顶部区域（前 30%），另起一页
+    page.evaluate('''() => {{
+        var pageHeight = window.innerHeight;
+        var h1s = document.querySelectorAll('h1');
+        h1s.forEach(function(h1) {{
+            // 跳过封面里的 h1
+            if (h1.closest('.md2pdf-cover')) return;
+            var rect = h1.getBoundingClientRect();
+            var posInPage = rect.top % pageHeight;
+            if (posInPage < 0) posInPage += pageHeight;
+            // 如果 H1 在页面 30% 以下的位置（不在页首），另起一页
+            if (posInPage > pageHeight * 0.3) {{
+                h1.style.pageBreakBefore = 'always';
+            }}
+        }});
+    }}''')
+    page.wait_for_timeout(100){mermaid_wait}
     page.pdf(
         path=pdf_path,
         {pdf_options},
@@ -733,7 +769,7 @@ def diagnose_pdf(pdf_path, with_cover=True, with_toc=True):
 # ============================================================
 
 def main():
-    themes_list = list_themes() or ["default"]
+    themes_list = [t for t in (list_themes() or ["default"]) if t != "chinese"]
 
     parser = argparse.ArgumentParser(
         description="md2pdf — Markdown 转 PDF（pandoc + Playwright 引擎）",
@@ -762,6 +798,8 @@ def main():
                         help="启用 KaTeX 数学公式渲染（pandoc --katex）")
     parser.add_argument("--mermaid", action="store_true", default=False,
                         help="启用 Mermaid 图表渲染（注入 mermaid.js）")
+    parser.add_argument("--chinese-layout", action="store_true", default=False,
+                        help="叠加中文排版增强（行距、首行缩进、禁则处理），可配合任意主题使用")
 
     args = parser.parse_args()
 
@@ -797,6 +835,7 @@ def main():
         font_family=args.font_family,
         katex=args.katex,
         mermaid=args.mermaid,
+        chinese_layout=args.chinese_layout,
     )
 
     if result["ok"]:

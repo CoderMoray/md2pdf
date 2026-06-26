@@ -7,7 +7,7 @@ description: |
   管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
   支持封面、目录、PDF 书签、页码和多主题。
 author: CoderMoray
-version: "1.3.2"
+version: "1.4.0"
 tags:
   - "文档处理"
   - "PDF生成"
@@ -101,10 +101,11 @@ python3 scripts/md2pdf.py --validate
 | Markdown → PDF 转换 | 合并多个 MD 为单个 PDF |
 | 封面页（从 front-matter 自动生成） | 从零创建 PDF（请先写 MD） |
 | 交互式目录 + PDF 侧边栏书签 | 分栏布局 |
-| 页码、多主题切换 | 动态页眉页脚自定义 |
-| 中文/英文/emoji/表格/代码块 | 加密/水印/签名 PDF |
+| 页码、多主题切换（default/academic） | 动态页眉页脚自定义 |
+| 中文排版增强（--chinese-layout） | 加密/水印/签名 PDF |
 | KaTeX 数学公式（pandoc --katex） | 复杂 LaTeX 数学环境 |
 | Mermaid 图表（注入 mermaid.js 渲染） | 动态/交互式图表 |
+| 智能分页（H1 另起页、代码块/表格保持完整） | — |
 | 自定义字号和纸张大小 | 深度排版控制 |
 | 环境自检（--validate） | — |
 
@@ -122,7 +123,7 @@ title: "文档标题"
 subtitle: "副标题（可选）"
 author: "作者名"
 date: "2026-06-26"
-version: "1.3.2"
+version: "1.4.0"
 ---
 ```
 
@@ -133,6 +134,7 @@ version: "1.3.2"
 | `--input <path>` | ✅ | 输入 Markdown 文件路径 |
 | `--output <path>` | ❌ | 输出 PDF 路径，不指定则自动生成 |
 | `--theme <name>` | ❌ | 主题：default / academic，默认 default |
+| `--chinese-layout` | ❌ | 叠加中文排版增强（行距、缩进、禁则），配合任意主题 |
 | `--cover` / `--no-cover` | ❌ | 是否生成封面页，默认开启。无 front-matter 时自动用文件名 |
 | `--toc` / `--no-toc` | ❌ | 是否生成目录，默认开启 |
 | `--toc-depth <n>` | ❌ | 目录深度 1-6，默认 4 |
@@ -150,7 +152,12 @@ version: "1.3.2"
 
 ### 第 1 步：确认需求
 
-确认用户提供的 Markdown 文件路径，确认是否需要封面、目录、指定主题等。
+确认用户提供的 Markdown 文件路径，确认是否需要封面、目录、主题、中文排版等。
+
+**主题和排版：**
+- `--theme default`：苹果风格（默认）
+- `--theme academic`：学术风格
+- `--chinese-layout`：叠加中文排版增强（2倍行距、首行缩进、禁则处理），可配合任意主题
 
 **封面行为（智能默认）：**
 - 如果 MD 文件头部有 YAML front-matter 的 `title` 字段 → 以此为封面标题
@@ -200,8 +207,8 @@ python3 scripts/md2pdf.py --validate
 # 基本用法（AI 拼装命令后执行）
 python3 scripts/md2pdf.py --input /path/to/doc.md
 
-# 切换主题
-python3 scripts/md2pdf.py --input doc.md --theme academic
+# 切换主题 + 中文排版
+python3 scripts/md2pdf.py --input doc.md --theme academic --chinese-layout
 
 # 自定义封面/目录
 python3 scripts/md2pdf.py --input doc.md --no-cover --toc-depth 2
