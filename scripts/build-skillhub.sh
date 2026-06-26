@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 # build-skillhub.sh — md2pdf SkillHub 发布包构建
+# 用法: bash scripts/build-skillhub.sh [--slug <slug>]
+#   --slug: 覆盖 zip 内 SKILL.md 的 slug（用于 SkillHub slug 冲突时）
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# 解析参数
+SKILLHUB_SLUG=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --slug) SKILLHUB_SLUG="$2"; shift 2 ;;
+    *) echo "未知参数: $1"; exit 1 ;;
+  esac
+done
 
 # 读取版本号
 VERSION=$(python3 -c "import json; print(json.load(open('$ROOT/_meta.json'))['version'])" 2>/dev/null || echo "")
@@ -14,19 +25,26 @@ fi
 echo "📦 构建 SkillHub 发布包 (v$VERSION)..."
 
 TMPDIR=$(mktemp -d)
-ZIP_NAME="md2pdf-${VERSION}-skillhub.zip"
+SLUG_NAME="${SKILLHUB_SLUG:-md2pdf}"
+ZIP_NAME="${SLUG_NAME}-${VERSION}-skillhub.zip"
 ZIP_PATH="$ROOT/releases/$ZIP_NAME"
 
 # 确保 releases/ 目录存在
 mkdir -p "$ROOT/releases"
 
-# 复制 SkillHub 清单文件
+# 复制文件到临时目录
 echo "  复制文件..."
 cp "$ROOT/SKILL.md" "$TMPDIR/"
 cp "$ROOT/scripts/md2pdf.py" "$TMPDIR/"
 cp -r "$ROOT/themes" "$TMPDIR/themes"
 cp "$ROOT/README.md" "$TMPDIR/"
 [[ -f "$ROOT/docs/CHANGELOG.md" ]] && cp "$ROOT/docs/CHANGELOG.md" "$TMPDIR/CHANGELOG.md"
+
+# 如需覆盖 slug，修改临时 SKILL.md 中的 slug 字段
+if [[ -n "$SKILLHUB_SLUG" ]]; then
+  echo "  覆盖 slug: md2pdf → $SKILLHUB_SLUG"
+  sed -i '' "s/^slug:.*/slug: $SKILLHUB_SLUG/" "$TMPDIR/SKILL.md"
+fi
 
 # 打包
 cd "$TMPDIR"

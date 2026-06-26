@@ -73,15 +73,17 @@ echo "[2/7] 发布前自检..."
 bash "$SCRIPTS/lint-paths.sh"
 
 # ── Step 3: Build SkillHub Package ──────────────────────────────────
-echo "[3/7] 构建 SkillHub 包..."
-bash "$SCRIPTS/build-skillhub.sh"
+SKILLHUB_SLUG="md2pdf-chrome"  # SkillHub 上 md2pdf 被占用，使用 md2pdf-chrome
+echo "[3/7] 构建 SkillHub 包 (slug: $SKILLHUB_SLUG)..."
+bash "$SCRIPTS/build-skillhub.sh" --slug "$SKILLHUB_SLUG"
 
 # ── Step 4: Check File Size ─────────────────────────────────────────
 echo "[4/7] 文件尺寸检查..."
 bash "$SCRIPTS/check-file-size.sh"
 
 # ── Step 5: Publish to ClawHub ─────────────────────────────────────
-ZIP_PATH="$ROOT/releases/md2pdf-${VERSION}-skillhub.zip"
+SKILLHUB_SLUG="${SKILLHUB_SLUG:-md2pdf-chrome}"  # SkillHub 上 md2pdf 被占用
+ZIP_PATH="$ROOT/releases/${SKILLHUB_SLUG}-${VERSION}-skillhub.zip"
 
 if [[ "$DRY_RUN" == "true" ]]; then
   echo "[5/7] DRY-RUN: 跳过 ClawHub 发布"
@@ -139,6 +141,6 @@ echo "✅ md2pdf v$VERSION 发布完成"
 if [[ "$DRY_RUN" == "false" ]]; then
   echo ""
   echo "🧹 清理本地构建产物..."
-  rm -f "$ROOT/releases/md2pdf-${VERSION}-skillhub.zip"
-  echo "  ✅ 已删除: releases/md2pdf-${VERSION}-skillhub.zip"
+  rm -f "$ROOT/releases/${SKILLHUB_SLUG}-${VERSION}-skillhub.zip"
+  echo "  ✅ 已删除: releases/${SKILLHUB_SLUG}-${VERSION}-skillhub.zip"
 fi

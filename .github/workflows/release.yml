@@ -26,7 +26,7 @@ jobs:
         run: bash scripts/lint-paths.sh --strict
 
       - name: Build SkillHub Package
-        run: bash scripts/build-skillhub.sh
+        run: bash scripts/build-skillhub.sh --slug md2pdf-chrome
 
       - name: Build GitHub Release Package
         run: |
@@ -40,6 +40,7 @@ jobs:
           name: "md2pdf ${{ github.ref_name }}"
           body: "详见 [CHANGELOG.md](docs/CHANGELOG.md)"
           files: |
+            releases/md2pdf-chrome-*-skillhub.zip
             releases/md2pdf-*-skillhub.zip
             md2pdf-${{ github.ref_name }}-full.zip
           draft: false
