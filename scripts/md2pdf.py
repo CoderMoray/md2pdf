@@ -116,7 +116,7 @@ def list_themes():
 
 def build_cover_html(meta):
     """根据 front-matter 元数据生成封面页 HTML"""
-    parts = ['<div class="md2pdf-cover" style="page-break-after:always;">']
+    parts = ['<section data-page="cover" class="md2pdf-cover">']
 
     title = meta.get("title", "")
     if title:
@@ -140,7 +140,7 @@ def build_cover_html(meta):
     if version:
         parts.append(f'<p class="version">v{_escape_html(version)}</p>')
 
-    parts.append('</div>')
+    parts.append('</section>')
     return "\n".join(parts)
 
 
@@ -348,22 +348,14 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
         os.unlink(html_path)
         return {"ok": False, "error": f"pandoc 转换失败:\n{pandoc_proc.stderr}"}
 
-    # --- Step 2: 注入封面 + 分页控制 ---
+    # --- Step 2: 注入封面（分页通过 JS 在 Playwright 打印前动态插入） ---
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
 
-    # 封面：在 <body> 开头注入（封面自带 page-break-after:always 行内样式）
     if with_cover:
         cover_html = build_cover_html(meta)
         if cover_html.strip():
             html = html.replace("<body>", f"<body>\n{cover_html}")
-
-    # 目录 nav：添加 page-break-after:always（封面已 break → TOC 自然从第 2 页开始）
-    if with_toc:
-        html = html.replace(
-            '<nav id="TOC"',
-            '<nav id="TOC" style="page-break-after:always;"',
-        )
 
     # --- Step 3: 注入 CSS 主题 ---
     css = load_theme_css(theme, font_size)
@@ -390,6 +382,7 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
 
     footer_html = build_footer_html()
 
+    # 运行时通过 JS 设置 page-break（直接设在目标元素上，不插入任何新 DOM）
     code = f"""
 import sys
 from playwright.sync_api import sync_playwright
@@ -405,7 +398,7 @@ with sync_playwright() as p:
         {pdf_options},
         outline=True,
         display_header_footer=True,
-        header_template='',
+        header_template='<span></span>',
         footer_template={repr(footer_html)},
         margin={{"top": "20mm", "bottom": "20mm", "left": "20mm", "right": "20mm"}},
     )
