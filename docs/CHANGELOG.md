@@ -11,10 +11,29 @@
 ## [Unreleased]
 
 ### Added
-- 项目初始化：Markdown → PDF 转换管线（pandoc + Playwright 引擎）
-- 环境自检机制（`--validate`）
-- 自定义字号（`--font-size`）和纸张大小（`--page-size`）
-- 内置 CSS 样式排版
+- （暂无）
+
+---
+
+## [V1.3.1] - 2026-06-27
+
+### Added
+- **Mermaid 离线渲染** — 首次使用时自动下载 mermaid.js 到 `themes/mermaid.min.js`，后续从本地加载，无需 CDN
+- `--validate` 新增 Mermaid 缓存状态检测
+
+### Fixed
+- **封面智能回退** — 无 front-matter 时自动用文件名作为封面标题，不再生成空白封面页
+- **页面诊断修正** — 页数统计改用正则精确匹配 `/Type /Page`，不再误计 `/Type /Pages`
+
+---
+
+## [V1.3.0] - 2026-06-27
+
+### Added
+- **KaTeX 数学公式支持** — `--katex` 参数，通过 pandoc `--katex` 原生渲染 LaTeX 数学公式
+- **Mermaid 图表支持** — `--mermaid` 参数，注入 mermaid.js 渲染流程图、时序图、甘特图等
+- Mermaid 自动检测：仅当 Markdown 包含 ` ```mermaid ` 代码块时才注入 mermaid.js
+- Playwright 等待 Mermaid 渲染完成后才输出 PDF
 
 ---
 

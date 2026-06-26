@@ -7,7 +7,7 @@ description: |
   管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
   支持封面、目录、PDF 书签、页码和多主题。
 author: CoderMoray
-version: "1.2.0"
+version: "1.3.1"
 tags:
   - "文档处理"
   - "PDF生成"
@@ -103,6 +103,8 @@ python3 scripts/md2pdf.py --validate
 | 交互式目录 + PDF 侧边栏书签 | 分栏布局 |
 | 页码、多主题切换 | 动态页眉页脚自定义 |
 | 中文/英文/emoji/表格/代码块 | 加密/水印/签名 PDF |
+| KaTeX 数学公式（pandoc --katex） | 复杂 LaTeX 数学环境 |
+| Mermaid 图表（注入 mermaid.js 渲染） | 动态/交互式图表 |
 | 自定义字号和纸张大小 | 深度排版控制 |
 | 环境自检（--validate） | — |
 
@@ -120,7 +122,7 @@ title: "文档标题"
 subtitle: "副标题（可选）"
 author: "作者名"
 date: "2026-06-26"
-version: "1.2.0"
+version: "1.3.1"
 ---
 ```
 
@@ -131,12 +133,14 @@ version: "1.2.0"
 | `--input <path>` | ✅ | 输入 Markdown 文件路径 |
 | `--output <path>` | ❌ | 输出 PDF 路径，不指定则自动生成 |
 | `--theme <name>` | ❌ | 主题：default / academic，默认 default |
-| `--cover` / `--no-cover` | ❌ | 是否生成封面页，默认开启 |
+| `--cover` / `--no-cover` | ❌ | 是否生成封面页，默认开启。无 front-matter 时自动用文件名 |
 | `--toc` / `--no-toc` | ❌ | 是否生成目录，默认开启 |
 | `--toc-depth <n>` | ❌ | 目录深度 1-6，默认 4 |
 | `--font-size <px>` | ❌ | 正文字号，默认 14px |
 | `--font-family <name>` | ❌ | 正文字体，覆盖主题默认字体 |
 | `--page-size <format>` | ❌ | A4 / A3 / letter / legal，默认 A4 |
+| `--katex` | ❌ | 启用 KaTeX 数学公式渲染 |
+| `--mermaid` | ❌ | 启用 Mermaid 图表渲染 |
 | `--validate` | ❌ | 环境检测模式，不执行转换 |
 | `--list-themes` | ❌ | 列出可用主题 |
 
@@ -148,7 +152,12 @@ version: "1.2.0"
 
 确认用户提供的 Markdown 文件路径，确认是否需要封面、目录、指定主题等。
 
-如果用户需要封面，指导其在 MD 文件头部添加 front-matter：
+**封面行为（智能默认）：**
+- 如果 MD 文件头部有 YAML front-matter 的 `title` 字段 → 以此为封面标题
+- 如果 MD 没有 front-matter → 自动用文件名作为封面标题（如 `技术方案.md` → 封面显示"技术方案"）
+- 如果用户不需要封面 → 传 `--no-cover`
+
+**如果用户想要更丰富的封面信息，指导其添加 front-matter：**
 
 ```yaml
 ---
@@ -202,6 +211,15 @@ python3 scripts/md2pdf.py --input doc.md --font-size 16 --page-size A3
 
 # 无封面、无目录的简洁模式
 python3 scripts/md2pdf.py --input doc.md --no-cover --no-toc
+
+# 启用 KaTeX 数学公式
+python3 scripts/md2pdf.py --input doc.md --katex
+
+# 启用 Mermaid 图表
+python3 scripts/md2pdf.py --input doc.md --mermaid
+
+# 同时启用 KaTeX + Mermaid
+python3 scripts/md2pdf.py --input doc.md --katex --mermaid
 ```
 
 ### 第 4 步：验证输出
@@ -217,10 +235,11 @@ python3 scripts/md2pdf.py --input doc.md --no-cover --no-toc
 ## 架构
 
 ```
-管线: Markdown → 解析 front-matter → pandoc (--toc) →
-      注入封面 HTML → 注入 CSS 主题 → Playwright PDF
-         ↑                               ↑
-    commonmark_x 解析               outline + 页脚模板
+管线: Markdown → 解析 front-matter → pandoc (--toc, --katex) →
+      注入封面 HTML → 注入 CSS 主题 → 注入 Mermaid.js（本地缓存）→
+      Playwright PDF (等待 Mermaid 渲染 → 输出)
+         ↑                                    ↑
+    commonmark_x 解析                    outline + 页脚模板
 ```
 
 **为什么这样设计：**
@@ -228,6 +247,8 @@ python3 scripts/md2pdf.py --input doc.md --no-cover --no-toc
 - Playwright 使用真实 Chromium 浏览器渲染，输出与预览一致
 - 封面/目录/页码全部由脚本自动处理，无需 AI 干预
 - PDF 书签（outline）让阅读器侧边栏可交互跳转
+- Mermaid.js 首次自动下载并本地缓存，后续离线可用
+- 无 front-matter 时封面自动用文件名，不会出现空白页
 - 结果可复现：同一份 MD 每次输出完全相同的 PDF
 
 ### PDF 交互特性
@@ -264,6 +285,6 @@ python3 scripts/md2pdf.py --input doc.md --no-cover --no-toc
 | playwright 未安装 | `pip install playwright && playwright install chromium` |
 | 中文显示为方块 | 确认系统有中文字体（macOS 自带 PingFang） |
 | emoji 不显示 | 确认使用 `--validate` 检测到的环境正常 |
-| 封面没显示 | 确认 MD 文件头部有 `title:` 字段的 front-matter |
+| 封面没显示 | 确认 MD 文件头部有 `title:` 字段；无 front-matter 时自动用文件名作为封面标题 |
 | 目录为空 | 确认文档有 H1-H4 标题，或增加 `--toc-depth 6` |
 | 输出文件未生成 | 检查输出路径是否有写入权限 |

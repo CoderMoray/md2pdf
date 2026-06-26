@@ -9,3 +9,6 @@ dist/
 # 用户输出文件
 output/*
 !output/.gitkeep
+
+# Mermaid 运行时缓存（首次使用时自动下载）
+themes/mermaid.min.js
