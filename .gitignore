@@ -5,3 +5,7 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+
+# 用户输出文件
+output/*
+!output/.gitkeep

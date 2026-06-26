@@ -21,6 +21,45 @@ category: "utility"
 
 将 Markdown 文件转换为排版精美的 PDF，不依赖 AI 语义理解。
 
+---
+
+## Skill 初始化
+
+当此 Skill 首次加载时，执行以下步骤：
+
+### 1. 环境检测
+
+```bash
+python3 scripts/md2pdf.py --validate
+```
+
+如果环境不完整，依次安装缺失组件并重新检测。
+
+### 2. 用户偏好配置
+
+主动询问用户以下偏好，写入 `output/user-config.json`：
+
+```json
+{
+  "theme": "default",
+  "font_size": 14,
+  "page_size": "A4",
+  "toc": true,
+  "cover": true,
+  "toc_depth": 4
+}
+```
+
+如果用户跳过配置，使用上述默认值。
+
+### 3. 输出目录
+
+- 生成的 PDF 存储在 `output/` 目录下
+- 如果用户指定了输出路径，则以用户指定的为准
+- `output/` 中的文件不会被 git 跟踪（仅保留 `.gitkeep`）
+
+---
+
 ## 能力边界
 
 | 擅长 | 不擅长 |
@@ -171,6 +210,14 @@ python3 scripts/md2pdf.py --input doc.md --no-cover --no-toc
 转换成功后输出：`✅ 转换完成: /path/to/output.pdf (629 KB)`
 
 失败时输出错误信息到 stderr，退出码为 1。
+
+### 输出路径规则
+
+| 条件 | 输出路径 |
+|------|---------|
+| 用户指定了 `--output` | 以用户指定为准 |
+| 未指定 `--output`，MD 文件在本项目外 | MD 同目录下同名 `.pdf` |
+| 未指定 `--output`，MD 文件在技能目录内 | `output/<文件名>.pdf` |
 
 ---
 

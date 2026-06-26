@@ -1,3 +1,11 @@
+---
+title: "md2pdf — Markdown 转 PDF"
+subtitle: "Pandoc + Playwright 渲染引擎"
+author: "CoderMoray"
+date: "2026-06-26"
+version: "1.1.0"
+---
+
 # md2pdf — Markdown 转 PDF
 
 > 将 Markdown 文档渲染为排版精美的 PDF 文件。  

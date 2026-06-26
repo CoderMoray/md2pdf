@@ -400,9 +400,10 @@ with sync_playwright() as p:
     page.pdf(
         path=pdf_path,
         {pdf_options},
-        outline=True,                # 生成 PDF 侧边栏书签
-        displayHeaderFooter=True,     # 显示页眉页脚
-        footerTemplate={repr(footer_html)},
+        outline=True,
+        display_header_footer=True,
+        header_template='',
+        footer_template={repr(footer_html)},
         margin={{"top": "20mm", "bottom": "20mm", "left": "20mm", "right": "20mm"}},
     )
     browser.close()
@@ -466,8 +467,15 @@ def main():
     if not args.input:
         parser.error("请指定 --input")
     if not args.output:
-        base = os.path.splitext(args.input)[0]
-        args.output = base + ".pdf"
+        input_abs = os.path.abspath(args.input)
+        # 如果输入文件在本技能目录内，输出到 output/ 目录
+        if input_abs.startswith(PROJECT_DIR):
+            os.makedirs(os.path.join(PROJECT_DIR, "output"), exist_ok=True)
+            base = os.path.splitext(os.path.basename(args.input))[0]
+            args.output = os.path.join(PROJECT_DIR, "output", base + ".pdf")
+        else:
+            base = os.path.splitext(args.input)[0]
+            args.output = base + ".pdf"
 
     # 执行转换
     result = md_to_pdf(
