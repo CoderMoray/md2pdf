@@ -17,11 +17,7 @@
 
 ## 效果预览
 
-| Default 主题（苹果风格） | Academic 主题（学术风格） |
-|:---:|:---:|
-| [![default](output/README-default.pdf)](output/README-default.pdf) | [![academic](output/README-academic.pdf)](output/README-academic.pdf) |
-
-> 点击链接下载示例 PDF
+[📄 默认主题示例 PDF](output/README-default.pdf) | [📄 学术主题示例 PDF](output/README-academic.pdf)
 
 ---
 
@@ -34,7 +30,6 @@
 npx skills add CoderMoray/md2pdf
 
 # 方式二：GitHub 仓库直接引用
-# 在 CodeBuddy 的 skills/ 目录下 clone
 cd .codebuddy/skills
 git clone https://github.com/CoderMoray/md2pdf.git
 ```
@@ -43,15 +38,9 @@ git clone https://github.com/CoderMoray/md2pdf.git
 
 安装后，在 CodeBuddy 里直接对 AI 说：
 
-> "把这份 report.md 转成 PDF，用学术主题，加上水印'内部资料'"
+> "把这份 report.md 转成 PDF，用学术主题"
 
 AI 会自动执行完整的转换流程。你不需要知道参数、脚本在哪里、Python 怎么跑。
-
-### 如果不使用 AI Agent（直接命令行）
-
-```bash
-python3 scripts/md2pdf.py --input doc.md --theme academic
-```
 
 ---
 
@@ -114,20 +103,27 @@ version: "1.0"
 
 ### 依赖
 
-| 组件 | 安装命令 |
-|------|---------|
-| pandoc | `brew install pandoc`（macOS） |
-| Playwright | `pip install playwright && playwright install chromium` |
+| 组件 | 说明 |
+|------|------|
+| pandoc | Markdown → HTML 转换器（约 30MB） |
+| Playwright + Chromium | HTML → PDF 渲染引擎（约 180MB） |
+
+安装命令：
+
+```bash
+brew install pandoc
+pip install playwright && playwright install chromium
+```
 
 ### 项目结构
 
 ```
 md2pdf/
 ├── SKILL.md              # 核心：CodeBuddy 读取的 Skill 描述
-├── scripts/md2pdf.py     # 转换引擎（pandoc + Playwright）
+├── scripts/md2pdf.py     # 转换引擎
 ├── themes/
-│   ├── default.css       # 默认主题（苹果风格）
-│   └── academic.css      # 学术主题（衬线）
+│   ├── default.css       # 默认主题
+│   └── academic.css      # 学术主题
 ├── output/               # 生成的 PDF
 ├── docs/CHANGELOG.md
 └── README.md
@@ -135,20 +131,40 @@ md2pdf/
 
 ---
 
+## CLI 参考（底层）
+
+如果不使用 AI Agent，也可以直接命令行调用：
+
+```bash
+python3 scripts/md2pdf.py --input doc.md --theme academic
+```
+
+完整参数：
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `--input` | — | Markdown 文件路径（必填） |
+| `--output` | 自动推断 | 输出 PDF 路径 |
+| `--theme` | `default` | `default` / `academic` |
+| `--cover` / `--no-cover` | 开启 | 是否生成封面 |
+| `--toc` / `--no-toc` | 开启 | 是否生成目录 |
+| `--toc-depth` | `4` | 目录深度（1-6） |
+| `--font-size` | `14` | 字号（px） |
+| `--page-size` | `A4` | A4 / A3 / letter / legal |
+| `--validate` | — | 环境检测模式 |
+
+---
+
 ## 技术架构
 
 ```
-Markdown ──→ 解析 front-matter ──→ pandoc (--toc) ──→ HTML
-                                                        │
-                                             注入封面 + CSS 主题
-                                                        │
-                                                  Playwright
-                                                        │
-                                                   ┌────┴────┐
-                                                   │   PDF   │
-                                                   │ 封面/目录│
-                                                   │ 书签/页码│
-                                                   └─────────┘
+Markdown → 解析 front-matter → pandoc (--toc) → HTML
+                                                    ↓
+                                         注入封面 + CSS 主题
+                                                    ↓
+                                              Playwright (Chromium)
+                                                    ↓
+                                              PDF (封面/目录/书签/页码)
 ```
 
 - **pandoc** 解析 Markdown，不依赖 AI 理解
@@ -169,7 +185,7 @@ Markdown ──→ 解析 front-matter ──→ pandoc (--toc) ──→ HTML
 
 | 特性 | md2pdf | any2pdf (reportlab) |
 |------|:---:|:---:|
-| 安装体积 | ~300MB | ~10MB |
+| 安装体积 | ~210MB | ~10MB |
 | 中文支持 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | 代码高亮 | ⭐⭐⭐（真实浏览器） | ⭐⭐ |
 | 封面/目录/书签 | ✅ | ✅ |
