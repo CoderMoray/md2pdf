@@ -195,10 +195,10 @@ Markdown → pandoc (--toc) → HTML → Playwright/Chromium → PDF
 
 ### 能力对比
 
-| 维度 | **md2pdf** | any2pdf | WeasyPrint版 | LaTeX版 |
+| 维度 | **md2pdf** | [any2pdf](https://skillavatars.com/skills/lovstudio-any2pdf) | [md2pdf-weasyprint](https://skillhub.cn/skills/md2pdf-weasyprint) | [md2pdf-xelatex](https://skillhub.cn/skills/md2pdf-xelatex) |
 |------|:---:|:---:|:---:|:---:|
 | **引擎** | Chromium 浏览器 | reportlab | WeasyPrint | LaTeX |
-| **安装体积** | ~225 MB | ~10 MB | ~50 MB | 1-5 GB |
+| **安装体积** | ~225 MB（本体 < 0.1 MB） | ~10 MB | ~50 MB | 1-5 GB |
 | **代码高亮** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐ |
 | **CSS 灵活度** | ⭐⭐⭐⭐⭐ | ⭐ | ⭐⭐ | ❌ |
 | **中文/CJK** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
@@ -207,7 +207,7 @@ Markdown → pandoc (--toc) → HTML → Playwright/Chromium → PDF
 | **多主题** | 2 套 | 12 套 | ❌ | 模板定制 |
 | **环境自检** | ✅ | ❌ | ❌ | ❌ |
 | **页面诊断** | ✅ | ❌ | ❌ | ❌ |
-| **学习成本** | 零（一句自然语言） | 低（纯 Python） | 低 | 高（需懂 LaTeX） |
+| **学习成本** | 零（自然语言） | 低 | 低 | 高（需懂 LaTeX） |
 
 ### 为什么选 Chromium 路线？
 
