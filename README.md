@@ -98,15 +98,22 @@ version: "1.0"
 
 ## 安装与环境
 
-### 依赖
+### 体积说明
 
-| 组件 | 用途 | 大小 |
-|------|------|------|
-| pandoc | Markdown → HTML | ~35 MB |
-| Playwright + Chromium headless | HTML → PDF | ~190 MB |
+md2pdf 本身很小（脚本 + 主题 < 100 KB），主要空间花在渲染引擎上：
+
+| 层级 | 组件 | 大小 | 说明 |
+|------|------|------|------|
+| 📦 **本体** | `scripts/` + `themes/` | **< 0.1 MB** | Skill 核心代码，clone 即得 |
+| 📎 **依赖①** | pandoc | **~35 MB** | Markdown → HTML 转换 |
+| 🌐 **依赖②** | Playwright + Chromium | **~190 MB** | HTML → PDF 渲染引擎 |
+
+> 💡 如果系统已安装 Chrome/Edge，md2pdf 可复用系统浏览器，无需额外下载 Chromium。`--validate` 会自动检测。
 
 ```bash
 brew install pandoc
+# 中文用户建议使用镜像：
+PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/playwright \
 pip install playwright && playwright install chromium
 ```
 
@@ -176,7 +183,7 @@ Markdown → pandoc (--toc) → HTML → Playwright/Chromium → PDF
 
 | 特性 | md2pdf | any2pdf |
 |------|:---:|:---:|
-| 安装体积 | ~225 MB | ~10 MB |
+| 安装体积 | ~225 MB（本体 < 0.1 MB） | ~10 MB |
 | 中文支持 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | 代码高亮 | ⭐⭐⭐ | ⭐⭐ |
 | 封面/目录/书签 | ✅ | ✅ |

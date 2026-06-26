@@ -33,7 +33,39 @@ category: "utility"
 python3 scripts/md2pdf.py --validate
 ```
 
-如果环境不完整，依次安装缺失组件并重新检测。
+输出示例：
+```
+=======================================================
+  md2pdf — 环境检测
+  语言环境: 🇨🇳 中文
+=======================================================
+  ✅ pandoc: pandoc 2.12
+    路径: /opt/homebrew/bin/pandoc
+  ✅ 系统浏览器: Google Chrome 128.0.6613.137
+    路径: /Applications/Google Chrome.app/...
+  ✅ Playwright: via /usr/bin/python3
+    路径: /usr/bin/python3
+  ✅ Chromium: Playwright 内置 Chromium 就绪
+
+  🎨 可用主题: default, academic
+  🟢 环境就绪，可以转换。
+```
+
+### 2. 安装缺失组件（如需）
+
+如果环境检测失败，依次安装缺失组件：
+
+**缺失 pandoc：** 运行 `brew install pandoc`
+
+**缺失 Playwright + Chromium：**
+- 英文语境：`pip install playwright && playwright install chromium`
+- **中文/国内用户**，建议使用镜像源加速：
+  ```bash
+  PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/playwright \
+  pip install playwright && playwright install chromium
+  ```
+
+> AI 应检测用户的语言环境（如 `LANG=zh_CN`），自动选择是否显示镜像源提示。
 
 ### 2. 用户偏好配置
 

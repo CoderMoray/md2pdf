@@ -205,6 +205,26 @@ def check_playwright():
     return {"available": False, "path": None, "version": None}
 
 
+def check_system_chrome():
+    """检查系统是否已安装 Chrome/Chromium/Edge"""
+    candidates = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",  # macOS
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+        "google-chrome-stable", "google-chrome", "chromium", "chromium-browser",
+        "microsoft-edge", "edge",
+    ]
+    for cmd in candidates:
+        path = shutil.which(cmd) if "/" not in cmd else (cmd if os.path.isfile(cmd) else None)
+        if path:
+            try:
+                result = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=5)
+                version = result.stdout.strip()[:60] if result.stdout else "unknown"
+            except Exception:
+                version = "unknown"
+            return {"available": True, "path": path, "version": version}
+    return {"available": False, "path": None, "version": None}
+
+
 def check_chromium():
     probe_code = """
 import sys
@@ -224,12 +244,13 @@ except Exception as e:
             capture_output=True, text=True, timeout=30,
         )
         if result.returncode == 0:
-            return {"available": True, "detail": "Chromium 可用"}
+            return {"available": True, "detail": "Playwright 内置 Chromium 就绪"}
         elif "executable doesn't exist" in result.stderr:
-            return {"available": False, "detail": "Chromium 未安装，运行 playwright install chromium"}
+            return {"available": False, "detail": "未安装 Playwright Chromium",
+                     "hint": "playwright install chromium"}
         else:
             return {"available": False, "detail": (result.stderr.strip() or result.stdout.strip())[:200]}
-    return {"available": False, "detail": "无法找到可用的 Python 环境"}
+    return {"available": False, "detail": "无法找到安装了 Playwright 的 Python 环境"}
 
 
 def _find_python_with_playwright():
@@ -245,45 +266,105 @@ def _find_python_with_playwright():
     return candidates
 
 
+def _is_chinese_env():
+    """检测当前是否为中文语言环境"""
+    lang = os.environ.get("LANG", "")
+    return lang.startswith("zh") or "chinese" in lang.lower()
+
+
+def _install_hint(component):
+    """根据语言环境返回安装提示（含镜像建议）"""
+    cn = _is_chinese_env()
+    hints = {
+        "pandoc": {
+            "en": "  brew install pandoc",
+            "zh": "  brew install pandoc",
+        },
+        "playwright": {
+            "en": "  pip install playwright && playwright install chromium",
+            "zh": "  pip install playwright && playwright install chromium\n"
+                  "  国内用户建议使用镜像:\n"
+                  "  PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/playwright \\\n"
+                  "  pip install playwright && playwright install chromium",
+        },
+        "chromium": {
+            "en": "  playwright install chromium",
+            "zh": "  playwright install chromium\n"
+                  "  国内用户建议使用镜像:\n"
+                  "  PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/playwright \\\n"
+                  "  playwright install chromium",
+        },
+    }
+    hint = hints.get(component, {}).get("zh" if cn else "en", "")
+    if cn and component == "playwright":
+        return hint
+    return hint
+
+
 def run_validate():
+    is_cn = _is_chinese_env()
+    lang_tag = "🇨🇳 中文" if is_cn else "🇬🇧 English"
     print("=" * 55)
     print("  md2pdf — 环境检测")
+    print(f"  语言环境: {lang_tag}")
     print("=" * 55)
 
+    # pandoc
     pc = check_pandoc()
     if pc["available"]:
         print(f"  ✅ pandoc: {pc['version']}")
         print(f"    路径: {pc['path']}")
     else:
         print("  ❌ pandoc: 未找到")
-        print("    安装: brew install pandoc")
+        print(f"    {_install_hint('pandoc')}")
 
+    # 系统 Chrome（浏览器本体，非 Playwright）
+    sc = check_system_chrome()
+    if sc["available"]:
+        print(f"  ✅ 系统浏览器: {sc['version']}")
+        print(f"    路径: {sc['path']}")
+    else:
+        print("  ℹ️  系统浏览器: 未检测到 Chrome/Edge")
+        print("     非必需，Playwright 内置 Chromium 也可工作")
+
+    # Playwright
     pw = check_playwright()
     if pw["available"]:
         print(f"  ✅ Playwright: {pw['version']}")
         print(f"    路径: {pw['path']}")
     else:
         print("  ❌ Playwright: 未找到")
-        print("    安装: pip install playwright && playwright install chromium")
+        print(f"    {_install_hint('playwright')}")
 
+    # Chromium（Playwright 内置）
+    cr = {"available": False}
     if pw["available"]:
         cr = check_chromium()
         if cr["available"]:
-            print("  ✅ Chromium: 就绪")
+            print(f"  ✅ Chromium: {cr['detail']}")
         else:
             print(f"  ❌ Chromium: {cr['detail']}")
+            hint = cr.get("hint")
+            if hint:
+                print(f"    {_install_hint('chromium')}")
     else:
-        print("  ⚠️ Chromium: 跳过（Playwright 不可用）")
+        print("  ⚠️  Chromium: 跳过（Playwright 不可用）")
 
+    # 主题
     themes = list_themes()
     if themes:
         print(f"\n  🎨 可用主题: {', '.join(themes)}")
     else:
         print("\n  ⚠️ 未找到主题文件")
 
-    all_ok = pc["available"] and pw["available"] and cr["available"] if pw["available"] else False
+    # 结论
+    has_pw_chrome = pw["available"] and cr["available"]
+    has_system_browser = sc["available"]
+    all_ok = pc["available"] and (has_pw_chrome or has_system_browser)
     if all_ok:
         print("\n  🟢 环境就绪，可以转换。")
+        if has_system_browser and not has_pw_chrome:
+            print("  ⚡ 使用系统浏览器渲染（无需额外下载）")
     else:
         print("\n  🔴 环境不完整，请安装缺失组件。")
     return all_ok
