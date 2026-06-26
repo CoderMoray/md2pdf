@@ -1,6 +1,6 @@
 <p align="center">
   <h1 align="center">md2pdf</h1>
-  <p align="center">Markdown → 精美 PDF &middot; 一键生成封面/目录/书签/页码</p>
+  <p align="center">说句话，Markdown 变精美 PDF</p>
   <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
     <img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="Python 3.8+">
@@ -9,9 +9,9 @@
   </p>
 </p>
 
-**md2pdf** 是一个 [CodeBuddy Skill](https://www.codebuddy.ai)，将 Markdown 文档渲染为排版精美的 PDF，支持中文、代码块、表格、emoji。
+**md2pdf 是一个 CodeBuddy Skill**。安装后，你只需对 AI 说一句话，它就会把你的 Markdown 文件转成排版精美的 PDF——自动加上封面、目录、书签、页码。
 
-管线：**pandoc**（MD→HTML）→ **Playwright**（HTML→PDF），输出与浏览器预览完全一致。
+管线：**pandoc**（MD→HTML）→ **Playwright**（HTML→PDF），输出与浏览器预览一致。
 
 ---
 
@@ -21,25 +21,37 @@
 |:---:|:---:|
 | [![default](output/README-default.pdf)](output/README-default.pdf) | [![academic](output/README-academic.pdf)](output/README-academic.pdf) |
 
-> 点击链接下载示例 PDF，含封面、交互式目录、PDF 侧边栏书签、页码。
+> 点击链接下载示例 PDF
 
 ---
 
 ## 快速开始
 
+### 1. 安装 Skill
+
 ```bash
-# 1. 安装依赖
-brew install pandoc
-pip install playwright && playwright install chromium
+# 方式一：一键安装
+npx skills add CoderMoray/md2pdf
 
-# 2. 环境检测
-python3 scripts/md2pdf.py --validate
-
-# 3. 转换文档
-python3 scripts/md2pdf.py --input README.md
+# 方式二：GitHub 仓库直接引用
+# 在 CodeBuddy 的 skills/ 目录下 clone
+cd .codebuddy/skills
+git clone https://github.com/CoderMoray/md2pdf.git
 ```
 
-> 转换后的 PDF 自动保存在 `output/` 目录，内容不受 git 跟踪。
+### 2. 对 AI 说一句话
+
+安装后，在 CodeBuddy 里直接对 AI 说：
+
+> "把这份 report.md 转成 PDF，用学术主题，加上水印'内部资料'"
+
+AI 会自动执行完整的转换流程。你不需要知道参数、脚本在哪里、Python 怎么跑。
+
+### 如果不使用 AI Agent（直接命令行）
+
+```bash
+python3 scripts/md2pdf.py --input doc.md --theme academic
+```
 
 ---
 
@@ -48,29 +60,27 @@ python3 scripts/md2pdf.py --input README.md
 | 特性 | 说明 |
 |------|------|
 | 📄 **封面页** | 从 YAML front-matter 自动生成（标题/作者/日期/版本） |
-| 📑 **交互式目录** | 可点击目录页 + PDF 侧边栏书签（Outline） |
+| 📑 **交互式目录** | 可点击目录页 + PDF 侧边栏书签 |
 | 🔢 **页码** | 每页底部居中 |
 | 🎨 **多主题** | `default`（苹果风格） / `academic`（学术衬线） |
-| 🌏 **中英文混排** | 原生支持 CJK 字符，无乱码 |
+| 🌏 **中英文混排** | 原生支持 CJK，无乱码 |
 | 📊 **表格/代码块** | 完整保留格式，代码高亮 |
-| 🔧 **环境自检** | `--validate` 一键检测依赖完整性 |
+| 🔧 **环境自检** | 自动检测依赖完整性 |
+| 🧠 **AI 驱动** | 安装后一句话完成转换 |
 
-### 正在规划
+### 即将支持
 
 | 特性 | 状态 |
 |------|------|
 | KaTeX 数学公式 | 🚧 规划中 |
 | Mermaid 图表 | 🚧 规划中 |
 | 更多主题 | 📋 待定 |
-| 一键安装脚本 | 📋 待定 |
 
 ---
 
-## 使用方式
+## 封面配置
 
-### 封面配置
-
-在 Markdown 文件头部添加 YAML front-matter：
+在 Markdown 文件头部添加 YAML front-matter，AI 会自动读取并生成封面：
 
 ```yaml
 ---
@@ -82,85 +92,45 @@ version: "1.0"
 ---
 ```
 
-所有字段均为可选，有 `title` 字段就自动生成封面页。
-
-### CLI 参数
-
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `--input <path>` | — | 输入 Markdown 文件路径（必填） |
-| `--output <path>` | 自动推断 | 输出 PDF 路径 |
-| `--theme <name>` | `default` | 主题：`default` / `academic` |
-| `--cover` / `--no-cover` | `--cover` | 是否生成封面页 |
-| `--toc` / `--no-toc` | `--toc` | 是否生成目录 |
-| `--toc-depth <n>` | `4` | 目录标题层级深度（1-6） |
-| `--font-size <px>` | `14` | 正文字号 |
-| `--page-size <format>` | `A4` | 纸张：`A4` / `A3` / `letter` / `legal` |
-| `--validate` | — | 仅检测环境，不执行转换 |
-
-### 示例
-
-```bash
-# 基础转换
-python3 scripts/md2pdf.py --input doc.md
-
-# 学术主题
-python3 scripts/md2pdf.py --input doc.md --theme academic
-
-# 无封面、无目录的简洁模式
-python3 scripts/md2pdf.py --input doc.md --no-cover --no-toc
-
-# 控制目录深度和字号
-python3 scripts/md2pdf.py --input doc.md --toc-depth 2 --font-size 16
-
-# 切换纸张
-python3 scripts/md2pdf.py --input doc.md --page-size A3
-```
+所有字段可选。有 `title` 就有封面。
 
 ---
 
-## 安装
+## AI Agent 工作流
 
-### 作为 CodeBuddy Skill 使用
+当 AI 加载 md2pdf Skill 后，会自动执行：
 
-```bash
-# 从 GitHub 安装
-codebuddy skills install CoderMoray/md2pdf
-```
+1. **环境检测** → 运行 `--validate`，确保 pandoc + Playwright 就绪
+2. **询问偏好** → 主题、字号、纸张、是否需要封面/目录
+3. **执行转换** → 调用脚本生成 PDF
+4. **验证输出** → 运行页面诊断，确认无空白页异常
+5. **交付结果** → 告知用户 PDF 位置
 
-### 手动使用
-
-```bash
-git clone https://github.com/CoderMoray/md2pdf.git
-cd md2pdf
-
-# 依赖
-brew install pandoc                      # macOS
-pip install playwright
-playwright install chromium
-
-# 运行
-python3 scripts/md2pdf.py --validate
-```
+用户只需提供 MD 文件路径，其余全部自动完成。
 
 ---
 
-## 项目结构
+## 安装与环境
+
+### 依赖
+
+| 组件 | 安装命令 |
+|------|---------|
+| pandoc | `brew install pandoc`（macOS） |
+| Playwright | `pip install playwright && playwright install chromium` |
+
+### 项目结构
 
 ```
 md2pdf/
-├── SKILL.md              # CodeBuddy Skill 描述（AI Agent 读取）
-├── _meta.json            # 元数据（版本/分类/标签）
-├── scripts/
-│   └── md2pdf.py         # 核心转换引擎（pandoc + Playwright）
+├── SKILL.md              # 核心：CodeBuddy 读取的 Skill 描述
+├── scripts/md2pdf.py     # 转换引擎（pandoc + Playwright）
 ├── themes/
 │   ├── default.css       # 默认主题（苹果风格）
-│   └── academic.css      # 学术主题（衬线字体）
-├── output/               # 生成的 PDF（git ignored）
-├── docs/
-│   └── CHANGELOG.md
-├── README.md
-└── LICENSE
+│   └── academic.css      # 学术主题（衬线）
+├── output/               # 生成的 PDF
+├── docs/CHANGELOG.md
+└── README.md
 ```
 
 ---
@@ -172,7 +142,7 @@ Markdown ──→ 解析 front-matter ──→ pandoc (--toc) ──→ HTML
                                                         │
                                              注入封面 + CSS 主题
                                                         │
-                                              Playwright (Chromium)
+                                                  Playwright
                                                         │
                                                    ┌────┴────┐
                                                    │   PDF   │
@@ -181,31 +151,32 @@ Markdown ──→ 解析 front-matter ──→ pandoc (--toc) ──→ HTML
                                                    └─────────┘
 ```
 
-- **pandoc** 负责 Markdown 解析，不依赖 AI 理解
-- **Playwright** 使用真实 Chromium 渲染，输出与预览一致
-- 全部逻辑内嵌在脚本中，结果可复现：同一份 MD 每次输出完全相同的 PDF
+- **pandoc** 解析 Markdown，不依赖 AI 理解
+- **Playwright** 用真实 Chromium 渲染，输出与预览一致
+- 全部逻辑内嵌脚本，结果可复现
 
 ### PDF 交互特性
 
-| 特性 | 实现方式 |
-|------|---------|
-| 📌 侧边栏书签 | Playwright `outline: true`，阅读器左侧可点击书签树 |
-| 📑 页内目录跳转 | pandoc `--toc` 生成 `<a href="#id">` 超链接 |
-| 🔢 页码 | Playwright `displayHeaderFooter` 页脚模板 |
+| 特性 | 实现 |
+|------|------|
+| 📌 侧边栏书签 | Playwright `outline: true`，阅读器书签树 |
+| 📑 页内跳转 | pandoc `--toc` 超链接 |
+| 🔢 页码 | Playwright 页脚模板 |
 
 ---
 
-## 同类项目对比
+## 同类 Skill 对比
 
-| 特性 | md2pdf | Pandoc+LaTeX | any2pdf (reportlab) | VS Code 插件 |
-|------|:---:|:---:|:---:|:---:|
-| 安装体积 | ~300MB | 1-5GB | ~10MB | ~150MB |
-| 中文支持 | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
-| 代码高亮 | ⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐⭐ |
-| 封面/目录/书签 | ✅ | ✅ | ✅ | ❌ |
-| 多主题 | ✅ (2) | ❌ | ✅ (12) | ❌ |
-| 环境自检 | ✅ | ❌ | ❌ | ❌ |
-| AI Agent 集成 | ✅ (CodeBuddy) | ❌ | ✅ (npx) | ❌ |
+| 特性 | md2pdf | any2pdf (reportlab) |
+|------|:---:|:---:|
+| 安装体积 | ~300MB | ~10MB |
+| 中文支持 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| 代码高亮 | ⭐⭐⭐（真实浏览器） | ⭐⭐ |
+| 封面/目录/书签 | ✅ | ✅ |
+| 多主题 | ✅ (2) | ✅ (12) |
+| 环境自检 | ✅ | ❌ |
+| AI Agent 集成 | ✅ CodeBuddy | ✅ npx & MCP |
+| 页面诊断 | ✅ | ❌ |
 
 ---
 
