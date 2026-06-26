@@ -181,15 +181,40 @@ Markdown → pandoc (--toc) → HTML → Playwright/Chromium → PDF
 
 ## 同类对比
 
-| 特性 | md2pdf | any2pdf |
-|------|:---:|:---:|
-| 安装体积 | ~225 MB（本体 < 0.1 MB） | ~10 MB |
-| 中文支持 | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| 代码高亮 | ⭐⭐⭐ | ⭐⭐ |
-| 封面/目录/书签 | ✅ | ✅ |
-| 多主题 | 2 | 12 |
-| 环境自检 | ✅ | ❌ |
-| 页面诊断 | ✅ | ❌ |
+目前 SkillHub 和 ClawHub 上有多个 Markdown → PDF 技能，各自选了不同的技术路线。**md2pdf 选择 Playwright（真实 Chromium 浏览器）**，在排版质量和安装体积之间走中间路线。
+
+### 技术路线总览
+
+| 技能 | 引擎 | 路线 |
+|------|------|------|
+| **md2pdf** | Playwright + Chromium | 真实浏览器渲染 |
+| [any2pdf](https://skillavatars.com/skills/lovstudio-any2pdf) | reportlab | 纯 Python 画 PDF |
+| [md2pdf-weasyprint](https://skillhub.cn/skills/md2pdf-weasyprint) | WeasyPrint | Python CSS 排版 |
+| [md2pdf-xelatex](https://skillhub.cn/skills/md2pdf-xelatex) | LaTeX xelatex | 学术排版引擎 |
+| openclaw-md2pdf | 通用型 | 基础转换 |
+
+### 能力对比
+
+| 维度 | **md2pdf** | any2pdf | WeasyPrint版 | LaTeX版 |
+|------|:---:|:---:|:---:|:---:|
+| **引擎** | Chromium 浏览器 | reportlab | WeasyPrint | LaTeX |
+| **安装体积** | ~225 MB | ~10 MB | ~50 MB | 1-5 GB |
+| **代码高亮** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐ |
+| **CSS 灵活度** | ⭐⭐⭐⭐⭐ | ⭐ | ⭐⭐ | ❌ |
+| **中文/CJK** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **数学公式** | 🚧 规划中 | ❌ | ❌ | ⭐⭐⭐⭐⭐ |
+| **封面/目录/书签** | ✅ | ✅ | ⭐ | ✅ |
+| **多主题** | 2 套 | 12 套 | ❌ | 模板定制 |
+| **环境自检** | ✅ | ❌ | ❌ | ❌ |
+| **页面诊断** | ✅ | ❌ | ❌ | ❌ |
+| **学习成本** | 零（一句自然语言） | 低（纯 Python） | 低 | 高（需懂 LaTeX） |
+
+### 为什么选 Chromium 路线？
+
+- **WeasyPrint** 轻量但不支持 Flex/Grid 等现代 CSS，复杂表格和代码块易断裂
+- **LaTeX** 排版最美但安装体积大、学习成本高，不适合"一句话生成 PDF"的 Skill 场景
+- **reportlab** 最轻但需要手动处理每个渲染细节（代码换行、中文避头尾等）
+- **Chromium** 在二者之间 —— 体积可控、CSS 完整支持、代码高亮与浏览器一致
 
 ---
 
