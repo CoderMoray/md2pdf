@@ -348,19 +348,37 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
         os.unlink(html_path)
         return {"ok": False, "error": f"pandoc 转换失败:\n{pandoc_proc.stderr}"}
 
-    # --- Step 2: 注入封面 HTML ---
+    # --- Step 2: 注入封面 HTML + 显式分页符 ---
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
 
-    inject_bits = []
+    # 在 <body> 开头构建注入内容
+    inject_parts = []
+
     if with_cover:
         cover_html = build_cover_html(meta)
         if cover_html.strip():
-            inject_bits.append(cover_html)
+            inject_parts.append(cover_html)
+            # 封面后显式分页（避免 CSS page-break 在 Chromium 中的渲染 quirks）
+            inject_parts.append('<div style="page-break-before: always;"></div>')
 
-    inject_html = "\n".join(inject_bits)
+    # 如果生成了目录，在目录后也加显式分页
+    if with_toc:
+        # 用不可见分隔标记，之后替换为分页
+        inject_parts.append('<!-- MD2PDF_TOC_PAGE_BREAK -->')
+
+    inject_html = "\n".join(inject_parts)
     if inject_html:
         html = html.replace("<body>", f"<body>\n{inject_html}")
+
+    # 如果启用了目录，在 pandoc 生成的 TOC nav 后插入分页
+    if with_toc:
+        html = html.replace('<!-- MD2PDF_TOC_PAGE_BREAK -->', '')
+        html = html.replace(
+            '</nav>',
+            '</nav><div style="page-break-before: always;"></div>',
+            1,  # 只替换第一个 </nav>（即 TOC 的）
+        )
 
     # --- Step 3: 注入 CSS 主题 ---
     css = load_theme_css(theme, font_size)

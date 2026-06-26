@@ -65,7 +65,6 @@ img { max-width: 100%; height: auto; }
     align-items: center;
     text-align: center;
     min-height: 90vh;
-    page-break-after: always;
     padding: 60px 40px;
 }
 .md2pdf-cover h1 {
@@ -101,7 +100,6 @@ img { max-width: 100%; height: auto; }
    目录页（pandoc --toc 自动生成）
    ════════════════════════════════════════════════════════════ */
 nav#TOC {
-    page-break-after: always;
     padding: 20px 0;
 }
 nav#TOC h1,
