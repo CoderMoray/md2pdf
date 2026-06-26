@@ -134,3 +134,11 @@ fi
 
 echo ""
 echo "✅ md2pdf v$VERSION 发布完成"
+
+# ── 清理：删除本地构建产物（已发布到平台和 GitHub，不再需要） ──
+if [[ "$DRY_RUN" == "false" ]]; then
+  echo ""
+  echo "🧹 清理本地构建产物..."
+  rm -f "$ROOT/releases/md2pdf-${VERSION}-skillhub.zip"
+  echo "  ✅ 已删除: releases/md2pdf-${VERSION}-skillhub.zip"
+fi
