@@ -85,8 +85,8 @@ def _scan_themes():
 _scan_themes()
 
 
-def load_theme_css(theme_name, font_size=None):
-    """加载主题 CSS，可选覆盖字号"""
+def load_theme_css(theme_name, font_size=None, font_family=None):
+    """加载主题 CSS，可选覆盖字号和字体"""
     if theme_name not in AVAILABLE_THEMES:
         print(f"⚠️  主题 '{theme_name}' 不存在，使用 default")
         theme_name = "default"
@@ -101,6 +101,15 @@ def load_theme_css(theme_name, font_size=None):
     if font_size:
         css = re.sub(r'font-size:\s*14px;', f'font-size: {font_size}px;', css)
         css = re.sub(r'font-size:\s*14pt;', f'font-size: {font_size}pt;', css)
+        css = re.sub(r'font-size:\s*12pt;', f'font-size: {font_size}pt;', css)
+
+    if font_family:
+        # 替换 body 的 font-family 声明
+        css = re.sub(
+            r'(body\s*\{[^}]*font-family:\s*)[^;"]*("?[^;"]*"?);',
+            rf'\1{font_family};',
+            css,
+        )
 
     return css
 
@@ -301,6 +310,47 @@ def _install_hint(component):
     return hint
 
 
+def _detect_cjk_fonts():
+    """检测系统可用的 CJK 字体"""
+    cjk_keywords = [
+        "PingFang", "Heiti", "Songti", "Kaiti", "STSong", "STHeiti",
+        "Noto.*CJK", "Noto.*Sans.*CJK", "Noto.*Serif.*CJK",
+        "Source Han", "思源", "WenQuanYi", "文泉驿",
+        "Hiragino.*Sans", "Hiragino.*Mincho",
+        "Microsoft YaHei", "SimHei", "SimSun", "FangSong", "KaiTi",
+    ]
+    found = set()
+    try:
+        result = subprocess.run(
+            ["fc-list", ":lang=zh", "-f", "%{family}\n"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if result.returncode == 0:
+            for line in result.stdout.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                for kw in cjk_keywords:
+                    if re.search(kw, line, re.IGNORECASE):
+                        found.add(line.split(",")[0].strip())
+                        break
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    # Fallback: 检查 macOS 字体目录
+    mac_paths = [
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc",
+    ]
+    for p in mac_paths:
+        if os.path.isfile(p):
+            name = os.path.splitext(os.path.basename(p))[0].replace(" Light", "").replace(" Medium", "")
+            found.add(name)
+
+    return sorted(found)
+
+
 def run_validate():
     is_cn = _is_chinese_env()
     lang_tag = "🇨🇳 中文" if is_cn else "🇬🇧 English"
@@ -357,6 +407,22 @@ def run_validate():
     else:
         print("\n  ⚠️ 未找到主题文件")
 
+    # CJK 字体检测
+    cjk_fonts = _detect_cjk_fonts()
+    if cjk_fonts:
+        print(f"\n  🈶 检测到 {len(cjk_fonts)} 款 CJK 字体:")
+        for name in cjk_fonts[:8]:
+            print(f"     - {name}")
+        print(f"     建议: --font-family \"{cjk_fonts[0]}\"")
+    else:
+        print("\n  ⚠️ 未检测到 CJK 中文字体")
+        print("     建议: 安装中文字体包")
+        if sys.platform == "darwin":
+            print("     macOS 自带 PingFang SC，检查是否正常")
+        else:
+            print("     Ubuntu/Debian: sudo apt install fonts-noto-cjk")
+            print("     CentOS/Fedora:  sudo dnf install google-noto-cjk-fonts")
+
     # 结论
     has_pw_chrome = pw["available"] and cr["available"]
     has_system_browser = sc["available"]
@@ -386,7 +452,8 @@ def find_python_executable():
 
 
 def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
-              theme="default", with_cover=True, with_toc=True, toc_depth=4):
+              theme="default", with_cover=True, with_toc=True, toc_depth=4,
+              font_family=None):
     """
     Markdown → PDF 转换管线。
 
@@ -439,7 +506,7 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
             html = html.replace("<body>", f"<body>\n{cover_html}")
 
     # --- Step 3: 注入 CSS 主题 ---
-    css = load_theme_css(theme, font_size)
+    css = load_theme_css(theme, font_size, font_family)
     if css:
         html = html.replace("</head>", f"<style>{css}</style></head>")
 
@@ -582,6 +649,8 @@ def main():
                         help="不生成目录")
     parser.add_argument("--toc-depth", type=int, default=4, choices=range(1, 7),
                         help="目录深度（标题层级 1-6），默认 4")
+    parser.add_argument("--font-family", default=None,
+                        help="正文字体，覆盖主题默认字体。如 PingFang SC, Noto Serif CJK SC")
 
     args = parser.parse_args()
 
@@ -614,6 +683,7 @@ def main():
         with_cover=args.cover,
         with_toc=args.toc,
         toc_depth=args.toc_depth,
+        font_family=args.font_family,
     )
 
     if result["ok"]:

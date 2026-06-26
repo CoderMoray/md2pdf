@@ -7,7 +7,7 @@ description: |
   管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
   支持封面、目录、PDF 书签、页码和多主题。
 author: CoderMoray
-version: "1.1.0"
+version: "1.2.0"
 tags:
   - "文档处理"
   - "PDF生成"
@@ -69,6 +69,8 @@ python3 scripts/md2pdf.py --validate
 
 ### 2. 用户偏好配置
 
+### 3. 用户偏好配置
+
 主动询问用户以下偏好，写入 `output/user-config.json`：
 
 ```json
@@ -118,7 +120,7 @@ title: "文档标题"
 subtitle: "副标题（可选）"
 author: "作者名"
 date: "2026-06-26"
-version: "1.0"
+version: "1.2.0"
 ---
 ```
 
@@ -133,6 +135,7 @@ version: "1.0"
 | `--toc` / `--no-toc` | ❌ | 是否生成目录，默认开启 |
 | `--toc-depth <n>` | ❌ | 目录深度 1-6，默认 4 |
 | `--font-size <px>` | ❌ | 正文字号，默认 14px |
+| `--font-family <name>` | ❌ | 正文字体，覆盖主题默认字体 |
 | `--page-size <format>` | ❌ | A4 / A3 / letter / legal，默认 A4 |
 | `--validate` | ❌ | 环境检测模式，不执行转换 |
 | `--list-themes` | ❌ | 列出可用主题 |
