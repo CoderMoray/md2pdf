@@ -43,7 +43,11 @@ cp "$ROOT/README.md" "$TMPDIR/"
 # 如需覆盖 slug，修改临时 SKILL.md 中的 slug 字段
 if [[ -n "$SKILLHUB_SLUG" ]]; then
   echo "  覆盖 slug: md2pdf → $SKILLHUB_SLUG"
-  sed -i '' "s/^slug:.*/slug: $SKILLHUB_SLUG/" "$TMPDIR/SKILL.md"
+  if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' "s/^slug:.*/slug: $SKILLHUB_SLUG/" "$TMPDIR/SKILL.md"
+  else
+    sed -i "s/^slug:.*/slug: $SKILLHUB_SLUG/" "$TMPDIR/SKILL.md"
+  fi
 fi
 
 # 打包
