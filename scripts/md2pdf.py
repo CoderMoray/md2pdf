@@ -309,6 +309,9 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
 
+    # 移除 pandoc --self-contained 自动注入的默认样式（会覆盖主题 CSS）
+    html = re.sub(r'<style>.*?</style>', '', html, flags=re.DOTALL)
+
     if with_cover:
         cover_html = build_cover_html(meta)
         if cover_html.strip():
