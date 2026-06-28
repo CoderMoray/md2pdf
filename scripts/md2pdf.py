@@ -435,16 +435,21 @@ document.addEventListener('DOMContentLoaded', function() {{
     page.evaluate('''() => {{
         var contentWidth = {content_width_px};
         document.querySelectorAll('table').forEach(function(table) {{
-            var wrapper = table.parentElement;
-            // 只处理非封面区域的表格
             if (table.closest('.md2pdf-cover')) return;
             var naturalWidth = table.scrollWidth;
             if (naturalWidth > contentWidth && contentWidth > 0) {{
                 var scale = contentWidth / naturalWidth;
+                var wrapper = document.createElement('div');
+                wrapper.style.width = contentWidth + 'px';
+                wrapper.style.margin = '0 auto';
+                wrapper.style.overflow = 'visible';
+                wrapper.style.height = Math.round(table.offsetHeight * scale) + 'px';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+                table.style.width = contentWidth + 'px';
                 table.style.transform = 'scale(' + scale + ')';
                 table.style.transformOrigin = 'top left';
-                table.style.width = naturalWidth + 'px';
-                table.style.marginBottom = '-' + (table.offsetHeight * (1 - scale)).toFixed(0) + 'px';
+                table.style.margin = '0';
             }}
         }});
     }}''')
