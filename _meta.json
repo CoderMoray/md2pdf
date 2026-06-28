@@ -3,7 +3,7 @@
   "displayName": "md2pdf / Markdown 转 PDF",
   "description": "将 Markdown 渲染为排版精美的 PDF。支持封面/目录/书签/页码/多主题/KaTeX/Mermaid/代码高亮。\nRender Markdown to beautifully typeset PDF. Cover/TOC/bookmarks/page numbers/themes/KaTeX/Mermaid/highlighting.",
   "author": "CoderMoray",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "license": "MIT",
   "tags": [
     "文档处理",
