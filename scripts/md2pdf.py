@@ -437,10 +437,13 @@ document.addEventListener('DOMContentLoaded', function() {{
         document.querySelectorAll('table').forEach(function(table) {{
             if (table.closest('.md2pdf-cover')) return;
             var naturalWidth = table.scrollWidth;
-            if (naturalWidth > contentWidth * 1.02 && contentWidth > 0) {{
+            // 5% 容差：避免表格宽度因边框/滚动条略微超标时误触发
+            if (naturalWidth > contentWidth * 1.05 && contentWidth > 0) {{
                 var scale = contentWidth / naturalWidth;
-                // zoom 同时缩放视觉和布局，避免页面断裂后乱序
+                // zoom 同时缩放视觉和布局，避免跨页乱序
                 table.style.zoom = scale;
+                // width:auto 让表格取内容自然宽度，margin:0 auto 居中
+                table.style.width = 'auto';
                 table.style.margin = '0 auto';
             }}
         }});
