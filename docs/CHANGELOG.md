@@ -15,6 +15,13 @@
 
 ---
 
+## [V1.5.4] - 2026-06-28
+
+### Fixed
+- **SKILL.md description 改为双语** — ClawHub 读取此字段作为 Short summary，支持中文+英文
+
+---
+
 ## [V1.5.3] - 2026-06-28
 
 ### Fixed

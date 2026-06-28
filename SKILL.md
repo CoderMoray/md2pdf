@@ -6,7 +6,7 @@ description: |
   将 Markdown 渲染为排版精美的 PDF，支持封面/目录/书签/页码/KaTeX/Mermaid/代码高亮。
   Render Markdown to beautifully typeset PDF. Cover/TOC/bookmarks/page numbers/KaTeX/Mermaid/highlighting.
 author: CoderMoray
-version: "1.5.3"
+version: "1.5.4"
 tags:
   - "文档处理"
   - "PDF生成"
@@ -123,7 +123,7 @@ title: "文档标题"
 subtitle: "副标题（可选）"
 author: "作者名"
 date: "2026-06-26"
-version: "1.5.3"
+version: "1.5.4"
 ---
 ```
 
