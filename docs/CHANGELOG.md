@@ -15,6 +15,24 @@
 
 ---
 
+## [V1.6.0] - 2026-06-28
+
+### Added
+- **代码语法高亮** — 注入 highlight.js（GitHub 主题），默认开启，190+ 语言
+- **链接蓝色** — `a { color: #007aff }`，通用蓝色+下划线标识超链接
+
+### Changed
+- **宽表缩放** — ≥5 列按列数自适应 zoom（5列=0.85, 6列=0.75, 7列=0.65…）
+- **表头样式** — 浅灰背景+深色粗体（default `#e8e8ed`, academic `#e8e4df`）
+- **README 精简** — 移除 CLI 参数表，保留示例+SKILL.md引用
+
+### Fixed
+- **pandoc 样式覆盖** — 移除 `--self-contained` 注入的默认样式，防止覆盖主题 CSS
+- **Chromium 颜色降级** — `print-color-adjust: exact` 修复深色背景文字被降级为灰色
+- **双语 description** — SKILL.md description 中英双语，供 ClawHub 展示
+
+---
+
 ## [V1.5.6] - 2026-06-28
 
 ### Fixed
