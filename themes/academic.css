@@ -69,13 +69,14 @@ table {
     border-collapse: collapse;
     width: 100%;
     margin: 14pt 0;
-    font-size: 10pt;
+    font-size: 9pt;
     background: #fff;
 }
 th, td {
     border: 1px solid #999;
-    padding: 5pt 8pt;
+    padding: 4pt 6pt;
     text-align: left;
+    overflow-wrap: break-word;
 }
 th {
     background: #e8e4df;
@@ -226,7 +227,10 @@ nav#TOC a::after {
 h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
 }
-pre, table, blockquote, img, svg, .mermaid {
+pre, blockquote, img, svg, .mermaid {
     page-break-inside: avoid;
+}
+table {
+    page-break-inside: auto;
 }
 /* 封面独占一页（page-break 在 HTML 内联样式中设置） */

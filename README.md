@@ -128,25 +128,10 @@ pip install playwright && playwright install chromium
 如果不使用 AI Agent，也可以直接命令行调用：
 
 ```bash
-python3 scripts/md2pdf.py --input doc.md --theme academic
+python3 scripts/md2pdf.py --input doc.md --theme academic --katex --mermaid
 ```
 
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `--input` | — | Markdown 文件路径（必填） |
-| `--output` | 自动推断 | 输出 PDF 路径 |
-| `--theme` | `default` | 主题：default / academic |
-| `--chinese-layout` | — | 叠加中文排版增强 |
-| `--cover` / `--no-cover` | 开启 | 是否生成封面 |
-| `--toc` / `--no-toc` | 开启 | 是否生成目录 |
-| `--toc-depth` | `4` | 目录深度（1-6） |
-| `--font-family` | 主题默认 | 正文字体，如 `PingFang SC` |
-| `--font-size` | `14` | 字号（px） |
-| `--page-size` | `A4` | A4 / A3 / letter / legal |
-| `--katex` | — | 启用 KaTeX 数学公式 |
-| `--mermaid` | — | 启用 Mermaid 图表 |
-| `--highlight` / `--no-highlight` | 开启 | 代码语法高亮，默认开启 |
-| `--validate` | — | 仅检测环境 |
+> 💡 通过 AI Agent 使用时，直接告诉它要转什么文件即可，无需手动记参数。完整 CLI 参考见 [SKILL.md](SKILL.md)。
 
 ---
 
@@ -205,21 +190,37 @@ Markdown → pandoc (--toc) → HTML → Playwright/Chromium → PDF
 
 ### 能力对比
 
-| 维度 | **md2pdf** | [any2pdf](https://skillavatars.com/skills/lovstudio-any2pdf) | [md2pdf (Typst)](https://clawhub.ai/hansschinkenwurst78-dev/skills/openclaw-md2pdf) | [md2pdf-weasyprint](https://skillhub.cn/skills/md2pdf-weasyprint) | [md2pdf-xelatex](https://skillhub.cn/skills/md2pdf-xelatex) |
-|------|:---:|:---:|:---:|:---:|:---:|
-| **引擎** | pandoc + Chromium | reportlab | Pandoc + Typst | WeasyPrint | LaTeX |
-| **本体体积** | < 0.1 MB | < 0.1 MB | < 1 MB | < 1 MB | < 1 MB |
-| **依赖体积** | ~225 MB | ~5 MB（纯 reportlab）<br>~300 MB（含 pandoc+TeX） | ~165 MB | ~80 MB | 150 MB ~ 4 GB |
-| **代码高亮** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐ |
-| **CSS 灵活度** | ⭐⭐⭐⭐⭐ | ⭐ | ⭐ | ⭐⭐ | ❌ |
-| **中文/CJK** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **数学公式** | ⭐⭐⭐⭐ (KaTeX) | ❌ | ⭐⭐⭐⭐⭐ | ❌ | ⭐⭐⭐⭐⭐ |
-| **图表/Mermaid** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **封面/目录/书签** | ✅ | ✅ | ✅ | ⭐ | ✅ |
-| **多主题** | 2 套 | 12 套 | 模板定制 | ❌ | 模板定制 |
-| **环境自检** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **页面诊断** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **学习成本** | 零（自然语言） | 低 | 低 | 低 | 高（需懂 LaTeX） |
+| 维度 | **md2pdf** | [any2pdf](https://skillavatars.com/skills/lovstudio-any2pdf) | [md2pdf (Typst)](https://clawhub.ai/hansschinkenwurst78-dev/skills/openclaw-md2pdf) |
+|------|:---:|:---:|:---:|
+| **引擎** | pandoc + Chromium | reportlab | Pandoc + Typst |
+| **本体体积** | < 0.1 MB | < 0.1 MB | < 1 MB |
+| **依赖体积** | ~225 MB | ~5 MB（纯 reportlab）<br>~300 MB（含 pandoc+TeX） | ~165 MB |
+| **代码高亮** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ |
+| **CSS 灵活度** | ⭐⭐⭐⭐⭐ | ⭐ | ⭐ |
+| **中文/CJK** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **数学公式** | ⭐⭐⭐⭐ (KaTeX) | ❌ | ⭐⭐⭐⭐⭐ |
+| **图表/Mermaid** | ✅ | ❌ | ❌ |
+| **封面/目录/书签** | ✅ | ✅ | ✅ |
+| **多主题** | 2 套 | 12 套 | 模板定制 |
+| **环境自检** | ✅ | ❌ | ❌ |
+| **页面诊断** | ✅ | ❌ | ❌ |
+| **学习成本** | 零（自然语言） | 低 | 低 |
+
+| 维度 | **md2pdf** | [md2pdf-weasyprint](https://skillhub.cn/skills/md2pdf-weasyprint) | [md2pdf-xelatex](https://skillhub.cn/skills/md2pdf-xelatex) |
+|------|:---:|:---:|:---:|
+| **引擎** | pandoc + Chromium | WeasyPrint | LaTeX |
+| **本体体积** | < 0.1 MB | < 1 MB | < 1 MB |
+| **依赖体积** | ~225 MB | ~80 MB | 150 MB ~ 4 GB |
+| **代码高亮** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐ |
+| **CSS 灵活度** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ❌ |
+| **中文/CJK** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **数学公式** | ⭐⭐⭐⭐ (KaTeX) | ❌ | ⭐⭐⭐⭐⭐ |
+| **图表/Mermaid** | ✅ | ❌ | ❌ |
+| **封面/目录/书签** | ✅ | ⭐ | ✅ |
+| **多主题** | 2 套 | ❌ | 模板定制 |
+| **环境自检** | ✅ | ❌ | ❌ |
+| **页面诊断** | ✅ | ❌ | ❌ |
+| **学习成本** | 零（自然语言） | 低 | 高（需懂 LaTeX） |
 
 ### 为什么选 Chromium 路线？
 

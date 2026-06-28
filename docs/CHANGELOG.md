@@ -15,6 +15,18 @@
 
 ---
 
+## [V1.5.1] - 2026-06-28
+
+### Fixed
+- **宽表截断修复** — 能力对比表从6列拆为两张4列表格，消除 Chromium 跨页列宽异常
+- **表格分页优化** — 移除 `page-break-inside: avoid` 对 `table` 的限制，允许表格自然跨页
+
+### Changed
+- **README 精简** — 移除完整 CLI 参数表，仅保留示例命令 + SKILL.md 引用
+- 表格字号统一缩小（default 10px, academic 9pt）
+
+---
+
 ## [V1.5.0] - 2026-06-28
 
 ### Added
