@@ -15,6 +15,19 @@
 
 ---
 
+## [V1.7.0] - 2026-06-28
+
+### Added
+- **自定义页眉** — `--header "XX公司"` / `--no-header`，Playwright header_template 注入
+- **水印** — `--watermark "机密"` / `--no-watermark`，PyMuPDF 每页平铺半透明文字
+- **PDF 加密** — `--password "pwd"`，pikepdf 加密（需安装 pikepdf）
+- **config.json** — 默认页眉/水印/加密配置，AI 首次使用时引导初始化并检查依赖
+
+### Changed
+- **SKILL.md 工作流** — 新增第 0 步「初始化配置」，含依赖检查逻辑
+
+---
+
 ## [V1.6.1] - 2026-06-28
 
 ### Changed
