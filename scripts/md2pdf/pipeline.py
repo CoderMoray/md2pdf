@@ -19,7 +19,7 @@ from .assets import _ensure_mermaid, _ensure_highlight
 def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
               theme="default", with_cover=True, with_toc=True, toc_depth=4,
               font_family=None, katex=False, mermaid=False, chinese_layout=False,
-              highlight=True):
+              highlight=True, header_text="", watermark_text="", password=""):
     """Markdown → PDF 转换管线"""
 
     if not os.path.isfile(md_path):
@@ -204,13 +204,15 @@ with sync_playwright() as p:
         {pdf_options},
         outline=True,
         display_header_footer=True,
-        header_template='<span></span>',
+        header_template={repr(f'<div style="font-size:9px;color:#8e8e93;text-align:center;width:100%">{header_text}</div>' if header_text else '<span></span>')},
         footer_template={repr(footer_html)},
         margin={{"top": "20mm", "bottom": "20mm", "left": "20mm", "right": "20mm"}},
     )
     browser.close()
 print('OK')
 """
+
+    # waterinject: 水印和加密在 pw_result 成功后处理
 
     pw_result = subprocess.run(
         [python_exec, "-c", code],
@@ -225,4 +227,51 @@ print('OK')
     if not os.path.isfile(pdf_path):
         return {"ok": False, "error": "PDF 文件未生成 → 可能原因: 输出路径无写入权限、磁盘空间不足。请检查: {pdf_path}"}
 
+    # --- Step 5: 水印 + 加密 ---
+    if watermark_text:
+        _add_watermark(pdf_path, watermark_text)
+    if password:
+        try:
+            _encrypt_pdf(pdf_path, password)
+        except ImportError:
+            return {"ok": False, "error": "PDF 加密需要 pikepdf。请运行: pip install pikepdf"}
+        except Exception as e:
+            return {"ok": False, "error": f"PDF 加密失败: {e}"}
+
     return {"ok": True, "output": pdf_path, "size": os.path.getsize(pdf_path)}
+
+
+def _add_watermark(pdf_path, text):
+    """在 PDF 每页叠加多行半透明水印"""
+    import fitz
+    import math
+    doc = fitz.open(pdf_path)
+    for page in doc:
+        rect = page.rect
+        w, h = rect.width, rect.height
+        font_size = max(30, min(w, h) * 0.06)
+        dx, dy = w * 0.4, h * 0.4
+        for row in range(-1, int(h / dy) + 2):
+            for col in range(-1, int(w / dx) + 2):
+                x = col * dx
+                y = row * dy
+                if 0 < x < w or 0 < y < h:
+                    page.insert_text(
+                        fitz.Point(x, y), text,
+                        fontsize=font_size, color=(0.7, 0.7, 0.7),
+                        fill_opacity=0.10,
+                    )
+    doc.save(pdf_path, incremental=True, encryption=fitz.PDF_ENCRYPT_KEEP)
+    doc.close()
+
+
+def _encrypt_pdf(pdf_path, password):
+    """用 pikepdf 加密 PDF"""
+    import pikepdf
+    pdf = pikepdf.open(pdf_path)
+    pdf.save(
+        pdf_path + ".enc",
+        encryption=pikepdf.Encryption(owner=password, user=password, R=4),
+    )
+    pdf.close()
+    os.replace(pdf_path + ".enc", pdf_path)

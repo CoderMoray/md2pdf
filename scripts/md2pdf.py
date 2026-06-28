@@ -2,6 +2,7 @@
 """md2pdf — Markdown → PDF 转换引擎 (CLI 入口)"""
 
 import argparse
+import json
 import os
 import sys
 
@@ -15,30 +16,72 @@ from md2pdf.config import (
 from validate import run_validate
 
 
+def _load_config():
+    """加载 config.json 获取默认页眉/水印/加密配置"""
+    config_path = os.path.join(PROJECT_DIR, "config.json")
+    if not os.path.isfile(config_path):
+        return {}
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        return {}
+
+
+def _resolve(value_cli, enabled_cli, cfg, key):
+    """解析一个配置项：CLI值 > CLI开关 > config默认 > 关闭"""
+    # 显式传了值 → 启用
+    if value_cli is not None:
+        return True, value_cli
+    # CLI 显式禁用
+    if enabled_cli is False:
+        return False, ""
+    # 用 config 默认
+    cfg_sec = cfg.get(key, {}) if cfg else {}
+    return cfg_sec.get("enabled", False), cfg_sec.get("text", "")
+
+
 def main():
     themes_list = [t for t in (list_themes() or ["default"]) if t != "chinese"]
+    cfg = _load_config()
 
     parser = argparse.ArgumentParser(
         description="md2pdf — Markdown 转 PDF（pandoc + Playwright 引擎）",
     )
     parser.add_argument("--input", "-i", help="输入 Markdown 文件路径")
     parser.add_argument("--output", "-o", help="输出 PDF 文件路径")
-    parser.add_argument("--validate", action="store_true", help="仅检测环境，不执行转换")
-    parser.add_argument("--font-size", type=int, default=None, help="正文字号（px），默认 14")
-    parser.add_argument("--page-size", default="A4", choices=["A4", "A3", "letter", "legal"], help="纸张大小")
-    parser.add_argument("--theme", default="default", choices=themes_list, help=f"主题。可用: {', '.join(themes_list)}")
-    parser.add_argument("--cover", action="store_true", default=True, help="生成封面页（默认开启）")
-    parser.add_argument("--no-cover", action="store_false", dest="cover", help="不生成封面")
-    parser.add_argument("--toc", action="store_true", default=True, help="生成目录（默认开启）")
-    parser.add_argument("--no-toc", action="store_false", dest="toc", help="不生成目录")
-    parser.add_argument("--toc-depth", type=int, default=4, choices=range(1, 7), help="目录深度 1-6")
-    parser.add_argument("--font-family", default=None, help="正文字体")
-    parser.add_argument("--katex", action="store_true", default=False, help="启用 KaTeX 数学公式")
-    parser.add_argument("--mermaid", action="store_true", default=False, help="启用 Mermaid 图表")
-    parser.add_argument("--chinese-layout", action="store_true", default=False, help="中文排版增强")
-    parser.add_argument("--highlight", action="store_true", default=True, help="代码语法高亮（默认开启）")
-    parser.add_argument("--no-highlight", action="store_false", dest="highlight", help="关闭代码高亮")
-    parser.add_argument("--list-themes", action="store_true", default=False, help="列出所有可用主题")
+    parser.add_argument("--validate", action="store_true", help="仅检测环境")
+    parser.add_argument("--font-size", type=int, default=None, help="正文字号（px）")
+    parser.add_argument("--page-size", default="A4", choices=["A4", "A3", "letter", "legal"])
+    parser.add_argument("--theme", default="default", choices=themes_list, help=f"可用: {', '.join(themes_list)}")
+    parser.add_argument("--cover", action="store_true", default=True)
+    parser.add_argument("--no-cover", action="store_false", dest="cover")
+    parser.add_argument("--toc", action="store_true", default=True)
+    parser.add_argument("--no-toc", action="store_false", dest="toc")
+    parser.add_argument("--toc-depth", type=int, default=4, choices=range(1, 7))
+    parser.add_argument("--font-family", default=None)
+    parser.add_argument("--katex", action="store_true", default=False)
+    parser.add_argument("--mermaid", action="store_true", default=False)
+    parser.add_argument("--chinese-layout", action="store_true", default=False)
+    parser.add_argument("--highlight", action="store_true", default=True)
+    parser.add_argument("--no-highlight", action="store_false", dest="highlight")
+    parser.add_argument("--list-themes", action="store_true", default=False)
+
+    # 页眉
+    parser.add_argument("--header", type=str, default=None, metavar="TEXT",
+                        help="自定义页眉文字（同时启用页眉）")
+    parser.add_argument("--no-header", action="store_false", dest="header_enabled",
+                        help="禁用页眉")
+    parser.set_defaults(header_enabled=None)
+    # 水印
+    parser.add_argument("--watermark", type=str, default=None, metavar="TEXT",
+                        help="水印文字（同时启用水印）")
+    parser.add_argument("--no-watermark", action="store_false", dest="watermark_enabled",
+                        help="禁用水印")
+    parser.set_defaults(watermark_enabled=None)
+    # 加密
+    parser.add_argument("--password", type=str, default=None, metavar="PWD",
+                        help="设置 PDF 打开密码")
 
     args = parser.parse_args()
 
@@ -63,6 +106,10 @@ def main():
         else:
             args.output = os.path.splitext(args.input)[0] + ".pdf"
 
+    # 解析页眉/水印/加密
+    header_on, header_text = _resolve(args.header, args.header_enabled, cfg, "header")
+    watermark_on, watermark_text = _resolve(args.watermark, args.watermark_enabled, cfg, "watermark")
+
     result = md_to_pdf(
         md_path=args.input, pdf_path=args.output,
         font_size=args.font_size, page_size=args.page_size,
@@ -70,6 +117,9 @@ def main():
         toc_depth=args.toc_depth, font_family=args.font_family,
         katex=args.katex, mermaid=args.mermaid,
         chinese_layout=args.chinese_layout, highlight=args.highlight,
+        header_text=header_text if header_on else "",
+        watermark_text=watermark_text if watermark_on else "",
+        password=args.password or "",
     )
 
     if result["ok"]:

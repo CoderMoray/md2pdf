@@ -144,6 +144,9 @@ version: "1.6.1"
 | `--katex` | ❌ | 启用 KaTeX 数学公式渲染 |
 | `--mermaid` | ❌ | 启用 Mermaid 图表渲染 |
 | `--highlight` / `--no-highlight` | ❌ | 代码语法高亮（highlight.js），默认开启 |
+| `--header <text>` / `--no-header` | ❌ | 自定义页眉文字，默认从 config.json 读取 |
+| `--watermark <text>` / `--no-watermark` | ❌ | 水印文字（半透明平铺），默认从 config.json 读取 |
+| `--password <pwd>` | ❌ | PDF 打开密码（需安装 pikepdf） |
 | `--validate` | ❌ | 环境检测模式，不执行转换 |
 | `--list-themes` | ❌ | 列出可用主题 |
 
@@ -151,9 +154,24 @@ version: "1.6.1"
 
 ## 工作流
 
+### 第 0 步：初始化配置（首次使用）
+
+检查 `config.json` 中页眉/水印/加密的默认值是否已设置。若均为空，引导用户选择：
+
+1. **页眉**：是否需要默认页眉？如"XX公司 · 内部文档"
+2. **水印**：是否需要默认水印？如"机密"、"DRAFT"
+3. **加密**：是否默认加密？（建议默认关闭）
+
+**如果用户启用水印或加密，先检查依赖：**
+- 水印依赖 PyMuPDF（`python3 -c "import fitz"`）
+- 加密依赖 pikepdf（`python3 -c "import pikepdf"`）
+- 若缺失，提示安装命令（`pip install pymupdf` / `pip install pikepdf`）
+
+用户也可在后续每次转换时通过 `--header`、`--watermark`、`--password` 显式覆盖。
+
 ### 第 1 步：确认需求
 
-确认用户提供的 Markdown 文件路径，确认是否需要封面、目录、主题、中文排版等。
+确认用户提供的 Markdown 文件路径，确认是否需要封面、目录、主题、中文排版、页眉、水印、加密等。
 
 **主题和排版：**
 - `--theme default`：苹果风格（默认）
