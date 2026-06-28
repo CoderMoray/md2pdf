@@ -27,10 +27,8 @@ Usage:
 """
 
 import argparse
-import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -176,7 +174,7 @@ def _escape_html(text):
 # ============================================================
 
 def build_footer_html():
-    """Playwright footerTemplate — 居中页码"""
+    """Playwright footerTemplate — 居中页码 Page X / Y"""
     return """
     <div style="
         width: 100%;
@@ -186,7 +184,7 @@ def build_footer_html():
         font-family: -apple-system, 'PingFang SC', sans-serif;
         padding: 0 20mm;
     ">
-        <span class="pageNumber"></span>
+        <span class="pageNumber"></span> / <span class="totalPages"></span>
     </div>
     """
 
@@ -532,8 +530,16 @@ def main():
                         help="启用 Mermaid 图表渲染（注入 mermaid.js）")
     parser.add_argument("--chinese-layout", action="store_true", default=False,
                         help="叠加中文排版增强（行距、首行缩进、禁则处理），可配合任意主题使用")
+    parser.add_argument("--list-themes", action="store_true", default=False,
+                        help="列出所有可用主题")
 
     args = parser.parse_args()
+
+    # --list-themes 模式
+    if args.list_themes:
+        for t in themes_list:
+            print(t)
+        sys.exit(0)
 
     # --validate 模式
     if args.validate:

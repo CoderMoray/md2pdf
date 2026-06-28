@@ -92,6 +92,7 @@ else
   echo "[5/7] 发布到 ClawHub..."
   if [[ "$SKIP_CLAWHUB" == "false" ]]; then
     (cd "$ROOT" && clawhub publish . --version "$VERSION" \
+      --name "md2pdf" \
       --changelog "详见 docs/CHANGELOG.md") || echo "  ⚠️  ClawHub 发布失败（可手动重试）"
   else
     echo "  ⏭️  跳过 ClawHub"

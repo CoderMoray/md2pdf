@@ -7,7 +7,7 @@ description: |
   管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
   支持封面、目录、PDF 书签、页码和多主题。
 author: CoderMoray
-version: "1.4.1"
+version: "1.4.2"
 tags:
   - "文档处理"
   - "PDF生成"
@@ -123,7 +123,7 @@ title: "文档标题"
 subtitle: "副标题（可选）"
 author: "作者名"
 date: "2026-06-26"
-version: "1.4.1"
+version: "1.4.2"
 ---
 ```
 

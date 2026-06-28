@@ -3,7 +3,7 @@
   "displayName": "md2pdf / Markdown 转 PDF",
   "description": "将 Markdown 文档渲染为排版精美的 PDF 文件。管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），输出效果与浏览器预览一致。",
   "author": "CoderMoray",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "license": "MIT",
   "tags": [
     "文档处理",
