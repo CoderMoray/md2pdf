@@ -278,7 +278,10 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
 
     if pandoc_proc.returncode != 0:
         os.unlink(html_path)
-        return {"ok": False, "error": f"pandoc 转换失败:\n{pandoc_proc.stderr}"}
+        stderr_text = pandoc_proc.stderr.strip()
+        if not stderr_text:
+            stderr_text = "(无错误输出，可能文件为空或编码异常)"
+        return {"ok": False, "error": f"pandoc 转换失败 → 常见原因: MD 语法错误、非 UTF-8 编码、文件不是 Markdown。\n详情: {stderr_text}"}
 
     # --- Step 2: 注入封面 + Mermaid + KaTeX CSS ---
     with open(html_path, "r", encoding="utf-8") as f:
@@ -431,10 +434,10 @@ print('OK')
     os.unlink(html_path)
 
     if pw_result.returncode != 0:
-        return {"ok": False, "error": f"Playwright PDF 生成失败:\n{pw_result.stderr}"}
+        return {"ok": False, "error": f"HTML→PDF 渲染失败 → 常见原因: Chromium 未安装、系统资源不足。运行 --validate 检查。\n详情: {pw_result.stderr}"}
 
     if not os.path.isfile(pdf_path):
-        return {"ok": False, "error": "PDF 文件未生成（未知错误）"}
+        return {"ok": False, "error": "PDF 文件未生成 → 可能原因: 输出路径无写入权限、磁盘空间不足。请检查: {pdf_path}"}
 
     pdf_size = os.path.getsize(pdf_path)
     return {"ok": True, "output": pdf_path, "size": pdf_size}

@@ -15,6 +15,17 @@
 
 ---
 
+## [V1.4.3] - 2026-06-28
+
+### Added
+- **`docs/FAQ.md`** — 完整常见问题指南（转换/封面/目录/字体/Mermaid/KaTeX/错误解读），供 AI 和用户查阅
+- **错误信息优化** — pandoc/Playwright 失败时附带常见原因分析，而非原始 stderr
+
+### Changed
+- **SKILL.md 常见问题** — 精简为 FAQ 索引，AI 遇到问题自动查阅 `docs/FAQ.md`
+
+---
+
 ## [V1.4.2] - 2026-06-28
 
 ### Added

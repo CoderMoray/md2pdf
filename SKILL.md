@@ -7,7 +7,7 @@ description: |
   管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
   支持封面、目录、PDF 书签、页码和多主题。
 author: CoderMoray
-version: "1.4.2"
+version: "1.4.3"
 tags:
   - "文档处理"
   - "PDF生成"
@@ -123,7 +123,7 @@ title: "文档标题"
 subtitle: "副标题（可选）"
 author: "作者名"
 date: "2026-06-26"
-version: "1.4.2"
+version: "1.4.3"
 ---
 ```
 
@@ -237,6 +237,8 @@ python3 scripts/md2pdf.py --input doc.md --katex --mermaid
 - 封面/目录/页码是否按预期生成
 - 打开确认排版无误，侧边栏有 PDF 书签
 
+**如果出现异常：** 脚本已输出带常见原因的错误信息。若需进一步排查，查阅 `docs/FAQ.md`。
+
 ---
 
 ## 架构
@@ -287,12 +289,12 @@ python3 scripts/md2pdf.py --input doc.md --katex --mermaid
 
 ## 常见问题
 
-| 问题 | 解决 |
-|------|------|
-| pandoc 未安装 | `brew install pandoc` |
-| playwright 未安装 | `pip install playwright && playwright install chromium` |
-| 中文显示为方块 | 确认系统有中文字体（macOS 自带 PingFang） |
-| emoji 不显示 | 确认使用 `--validate` 检测到的环境正常 |
-| 封面没显示 | 确认 MD 文件头部有 `title:` 字段；无 front-matter 时自动用文件名作为封面标题 |
-| 目录为空 | 确认文档有 H1-H4 标题，或增加 `--toc-depth 6` |
-| 输出文件未生成 | 检查输出路径是否有写入权限 |
+**转换异常或结果不符合预期时，第一时间查阅 `docs/FAQ.md`**。
+
+该文件覆盖：
+- 转换超时 / PDF 未生成 / 页数异常
+- 封面空白 / 目录为空 / 主题不对
+- 中文方块 / 字体选择 / Mermaid/KaTeX 不渲染
+- 错误信息解读（pandoc 失败、Playwright 失败等）
+
+FAQ 中的每个条目均包含原因分析和可执行的解决方案，AI 可直接引用回复用户。
