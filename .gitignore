@@ -10,5 +10,7 @@ dist/
 output/*
 !output/.gitkeep
 
-# Mermaid 运行时缓存（首次使用时自动下载）
+# 运行时缓存（首次使用时自动下载）
 themes/mermaid.min.js
+themes/highlight.min.js
+themes/highlight.css

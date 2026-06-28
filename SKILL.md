@@ -7,7 +7,7 @@ description: |
   管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
   支持封面、目录、PDF 书签、页码和多主题。
 author: CoderMoray
-version: "1.4.3"
+version: "1.5.0"
 tags:
   - "文档处理"
   - "PDF生成"
@@ -105,6 +105,7 @@ python3 scripts/md2pdf.py --validate
 | 中文排版增强（--chinese-layout） | 加密/水印/签名 PDF |
 | KaTeX 数学公式（pandoc --katex） | 复杂 LaTeX 数学环境 |
 | Mermaid 图表（注入 mermaid.js 渲染） | 动态/交互式图表 |
+| 代码语法高亮（highlight.js，190+ 语言） | — |
 | 智能分页（H1 另起页、代码块/表格保持完整） | — |
 | 自定义字号和纸张大小 | 深度排版控制 |
 | 环境自检（--validate） | — |
@@ -123,7 +124,7 @@ title: "文档标题"
 subtitle: "副标题（可选）"
 author: "作者名"
 date: "2026-06-26"
-version: "1.4.3"
+version: "1.5.0"
 ---
 ```
 
@@ -143,6 +144,7 @@ version: "1.4.3"
 | `--page-size <format>` | ❌ | A4 / A3 / letter / legal，默认 A4 |
 | `--katex` | ❌ | 启用 KaTeX 数学公式渲染 |
 | `--mermaid` | ❌ | 启用 Mermaid 图表渲染 |
+| `--highlight` / `--no-highlight` | ❌ | 代码语法高亮（highlight.js），默认开启 |
 | `--validate` | ❌ | 环境检测模式，不执行转换 |
 | `--list-themes` | ❌ | 列出可用主题 |
 
@@ -245,7 +247,7 @@ python3 scripts/md2pdf.py --input doc.md --katex --mermaid
 
 ```
 管线: Markdown → 解析 front-matter → pandoc (--toc, --katex) →
-      注入封面 HTML → 注入 CSS 主题 → 注入 Mermaid.js（本地缓存）→
+      注入封面 HTML → 注入 CSS 主题 → 注入 Mermaid.js/highlight.js（本地缓存）→
       Playwright PDF (等待 Mermaid 渲染 → 输出)
          ↑                                    ↑
     commonmark_x 解析                    outline + 页脚模板
@@ -256,7 +258,7 @@ python3 scripts/md2pdf.py --input doc.md --katex --mermaid
 - Playwright 使用真实 Chromium 浏览器渲染，输出与预览一致
 - 封面/目录/页码全部由脚本自动处理，无需 AI 干预
 - PDF 书签（outline）让阅读器侧边栏可交互跳转
-- Mermaid.js 首次自动下载并本地缓存，后续离线可用
+- Mermaid.js、highlight.js 首次自动下载并本地缓存，后续离线可用
 - 无 front-matter 时封面自动用文件名，不会出现空白页
 - 分页保护：代码块/表格/引用/图表保持完整，标题不孤行
 - 结果可复现：同一份 MD 每次输出完全相同的 PDF

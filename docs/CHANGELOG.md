@@ -15,6 +15,18 @@
 
 ---
 
+## [V1.5.0] - 2026-06-28
+
+### Added
+- **代码语法高亮** — 注入 highlight.js（GitHub 主题），默认开启。支持 Python/JS/Bash/SQL/JSON/HTML 等 190+ 语言
+- `--highlight` / `--no-highlight` 参数控制开关
+- `--validate` 新增 highlight.js 缓存状态检测
+
+### Changed
+- **README 技术对比更新** — 新增 openclaw-md2pdf (Pandoc + Typst) 技能链接和对比；引擎描述改为 `pandoc + Chromium`；安装体积拆分本体/依赖
+
+---
+
 ## [V1.4.3] - 2026-06-28
 
 ### Added

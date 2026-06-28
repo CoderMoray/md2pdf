@@ -201,3 +201,23 @@ HTML→PDF 阶段失败。常见原因：
 ### ❌ "无法下载 mermaid.js，跳过 Mermaid 渲染"
 
 网络不通。**不影响 PDF 生成**，只是 Mermaid 图表不渲染。联网后重试会自动缓存。
+
+### ❌ "无法下载 highlight.js，跳过代码高亮"
+
+网络不通。**不影响 PDF 生成**，代码仍正常显示只是无着色。联网后重试会自动缓存。
+
+---
+
+## 代码高亮
+
+### Q: 代码没有语法高亮？
+
+**原因**：highlight.js 默认开启，但以下情况可能无高亮：
+- 首次使用且网络不通（highlight.js 未缓存）
+- 使用了 `--no-highlight` 显式关闭
+
+**解决**：确保网络正常，首次转换会自动下载缓存。之后离线也可用。
+
+### Q: 支持哪些语言的语法高亮？
+
+highlight.js 支持 190+ 语言：Python、JavaScript、TypeScript、Bash、SQL、JSON、YAML、HTML、CSS、Go、Rust、Java、C/C++ 等。pandoc 从 Markdown 代码块的语言标记自动识别。

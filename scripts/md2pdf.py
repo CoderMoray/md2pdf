@@ -209,6 +209,26 @@ def _ensure_mermaid():
         return False
 
 
+HIGHLIGHT_JS_PATH = os.path.join(PROJECT_DIR, "themes", "highlight.min.js")
+HIGHLIGHT_CSS_PATH = os.path.join(PROJECT_DIR, "themes", "highlight.css")
+HIGHLIGHT_JS_URL = "https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/highlight.min.js"
+HIGHLIGHT_CSS_URL = "https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11/styles/github.min.css"
+
+
+def _ensure_highlight():
+    """确保本地有 highlight.js，没有则自动下载"""
+    ok = True
+    for path, url in [(HIGHLIGHT_JS_PATH, HIGHLIGHT_JS_URL), (HIGHLIGHT_CSS_PATH, HIGHLIGHT_CSS_URL)]:
+        if os.path.isfile(path):
+            continue
+        try:
+            import urllib.request
+            urllib.request.urlretrieve(url, path)
+        except Exception:
+            ok = False
+    return ok
+
+
 # ============================================================
 # 核心转换
 # ============================================================
@@ -226,12 +246,14 @@ def find_python_executable():
 
 def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
               theme="default", with_cover=True, with_toc=True, toc_depth=4,
-              font_family=None, katex=False, mermaid=False, chinese_layout=False):
+              font_family=None, katex=False, mermaid=False, chinese_layout=False,
+              highlight=True):
     """
     Markdown → PDF 转换管线。
 
     管线: Markdown → 解析 front-matter → pandoc (--toc, --katex) →
-          注入封面 HTML → 注入 CSS 主题 + 中文排版层 → 注入 Mermaid/KaTeX → Playwright PDF
+          注入封面 HTML → 注入 CSS 主题 + 中文排版层 →
+          注入 Mermaid/highlight.js → Playwright PDF
     """
 
     # --- 输入验证 ---
@@ -337,6 +359,30 @@ def md_to_pdf(md_path, pdf_path, font_size=None, page_size=None,
 """
                 html = html.replace("</body>", f"{mermaid_transform_js}</body>")
 
+    # --- Step 3.6: 注入 highlight.js（代码语法高亮，离线缓存） ---
+    has_highlight = False
+    if highlight:
+        if re.search(r'<pre[^>]*><code', html):
+            if not _ensure_highlight():
+                print("  ⚠️  无法下载 highlight.js，跳过代码高亮", file=sys.stderr)
+            else:
+                has_highlight = True
+                hl_injection = f"""
+<link rel="stylesheet" href="file://{HIGHLIGHT_CSS_PATH}">
+<script src="file://{HIGHLIGHT_JS_PATH}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {{
+    // pandoc 输出 class="sourceCode python"，去掉 sourceCode 让 highlight.js 识别语言
+    document.querySelectorAll('pre code').forEach(function(el) {{
+        el.className = el.className.replace(/sourceCode\\s*/g, '').trim();
+        el.parentElement.className = el.parentElement.className.replace(/sourceCode\\s*/g, '').trim();
+    }});
+    hljs.highlightAll();
+}});
+</script>
+"""
+                html = html.replace("</head>", f"{hl_injection}</head>")
+
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html)
 
@@ -413,6 +459,7 @@ with sync_playwright() as p:
         }});
     }}''')
     page.wait_for_timeout(100){mermaid_wait}
+    {'page.wait_for_timeout(300)  # 等待 highlight.js 完成' if has_highlight else ''}
     page.pdf(
         path=pdf_path,
         {pdf_options},
@@ -533,6 +580,10 @@ def main():
                         help="启用 Mermaid 图表渲染（注入 mermaid.js）")
     parser.add_argument("--chinese-layout", action="store_true", default=False,
                         help="叠加中文排版增强（行距、首行缩进、禁则处理），可配合任意主题使用")
+    parser.add_argument("--highlight", action="store_true", default=True,
+                        help="启用代码语法高亮（highlight.js，默认开启）")
+    parser.add_argument("--no-highlight", action="store_false", dest="highlight",
+                        help="关闭代码语法高亮")
     parser.add_argument("--list-themes", action="store_true", default=False,
                         help="列出所有可用主题")
 
@@ -546,7 +597,8 @@ def main():
 
     # --validate 模式
     if args.validate:
-        ok = run_validate(themes_list, MERMAID_JS_PATH)
+        ok = run_validate(themes_list, MERMAID_JS_PATH,
+                         HIGHLIGHT_JS_PATH, HIGHLIGHT_CSS_PATH)
         sys.exit(0 if ok else 1)
 
     # 参数校验
@@ -577,6 +629,7 @@ def main():
         katex=args.katex,
         mermaid=args.mermaid,
         chinese_layout=args.chinese_layout,
+        highlight=args.highlight,
     )
 
     if result["ok"]:

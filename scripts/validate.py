@@ -203,13 +203,15 @@ def detect_cjk_fonts():
 # 入口：环境检测
 # ============================================================
 
-def run_validate(themes_list, mermaid_js_path):
+def run_validate(themes_list, mermaid_js_path, highlight_js_path=None, highlight_css_path=None):
     """
     执行完整环境检测并打印结果。
     
     参数:
         themes_list: 可用主题名列表（如 ['default', 'academic']）
         mermaid_js_path: Mermaid.js 本地缓存路径
+        highlight_js_path: highlight.js 缓存路径（可选）
+        highlight_css_path: highlight.css 缓存路径（可选）
     返回:
         bool: 环境是否就绪
     """
@@ -274,6 +276,14 @@ def run_validate(themes_list, mermaid_js_path):
         print(f"\n  📈 Mermaid: 已缓存 ({size_kb:.0f} KB)")
     else:
         print("\n  📈 Mermaid: 未缓存，首次使用 --mermaid 时自动下载")
+
+    # Highlight.js 缓存
+    if highlight_js_path and highlight_css_path:
+        if os.path.isfile(highlight_js_path) and os.path.isfile(highlight_css_path):
+            size_kb = os.path.getsize(highlight_js_path) / 1024
+            print(f"\n  🌈 代码高亮: 已缓存 highlight.js ({size_kb:.0f} KB)")
+        else:
+            print("\n  🌈 代码高亮: 未缓存，首次转换时自动下载（默认开启）")
 
     # CJK 字体
     cjk_fonts = detect_cjk_fonts()
