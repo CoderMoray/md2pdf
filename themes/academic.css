@@ -69,14 +69,13 @@ table {
     border-collapse: collapse;
     width: 100%;
     margin: 14pt 0;
-    font-size: 9pt;
+    font-size: 10pt;
     background: #fff;
 }
 th, td {
     border: 1px solid #999;
-    padding: 4pt 6pt;
+    padding: 5pt 8pt;
     text-align: left;
-    overflow-wrap: break-word;
 }
 th {
     background: #e8e4df;

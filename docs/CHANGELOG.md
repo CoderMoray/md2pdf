@@ -18,7 +18,8 @@
 ## [V1.5.6] - 2026-06-28
 
 ### Fixed
-- **宽表容差提升至 5%** — 2% 容差不足（带边框 table 的 scrollWidth 普遍超标），导致普通表格也被缩放
+- **表格字号恢复** — default.css `font-size: 10px→13px`，academic.css `9pt→10pt`。之前为适配宽表全面缩小字号，导致所有表格文字过小。现改为仅对超宽表 zoom 缩放
+- **宽表容差提升至 5%** — 避免普通表格被误触发 zoom
 - **宽表居中** — `width: auto` + `margin: 0 auto`，配合 zoom 实现自然居中
 
 ---
