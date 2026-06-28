@@ -3,9 +3,8 @@ slug: md2pdf
 displayName: "md2pdf / Markdown 转 PDF"
 name: md2pdf
 description: |
-  将 Markdown 文档渲染为排版精美的 PDF 文件。
-  管线：pandoc（MD→HTML）+ Playwright（HTML→PDF），
-  支持封面、目录、PDF 书签、页码和多主题。
+  将 Markdown 渲染为排版精美的 PDF，支持封面/目录/书签/页码/KaTeX/Mermaid/代码高亮。
+  Render Markdown to beautifully typeset PDF. Cover/TOC/bookmarks/page numbers/KaTeX/Mermaid/highlighting.
 author: CoderMoray
 version: "1.5.3"
 tags:
