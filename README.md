@@ -190,37 +190,21 @@ Markdown → pandoc (--toc) → HTML → Playwright/Chromium → PDF
 
 ### 能力对比
 
-| 维度 | **md2pdf** | [any2pdf](https://skillavatars.com/skills/lovstudio-any2pdf) | [md2pdf (Typst)](https://clawhub.ai/hansschinkenwurst78-dev/skills/openclaw-md2pdf) |
-|------|:---:|:---:|:---:|
-| **引擎** | pandoc + Chromium | reportlab | Pandoc + Typst |
-| **本体体积** | < 0.1 MB | < 0.1 MB | < 1 MB |
-| **依赖体积** | ~225 MB | ~5 MB（纯 reportlab）<br>~300 MB（含 pandoc+TeX） | ~165 MB |
-| **代码高亮** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ |
-| **CSS 灵活度** | ⭐⭐⭐⭐⭐ | ⭐ | ⭐ |
-| **中文/CJK** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **数学公式** | ⭐⭐⭐⭐ (KaTeX) | ❌ | ⭐⭐⭐⭐⭐ |
-| **图表/Mermaid** | ✅ | ❌ | ❌ |
-| **封面/目录/书签** | ✅ | ✅ | ✅ |
-| **多主题** | 2 套 | 12 套 | 模板定制 |
-| **环境自检** | ✅ | ❌ | ❌ |
-| **页面诊断** | ✅ | ❌ | ❌ |
-| **学习成本** | 零（自然语言） | 低 | 低 |
-
-| 维度 | **md2pdf** | [md2pdf-weasyprint](https://skillhub.cn/skills/md2pdf-weasyprint) | [md2pdf-xelatex](https://skillhub.cn/skills/md2pdf-xelatex) |
-|------|:---:|:---:|:---:|
-| **引擎** | pandoc + Chromium | WeasyPrint | LaTeX |
-| **本体体积** | < 0.1 MB | < 1 MB | < 1 MB |
-| **依赖体积** | ~225 MB | ~80 MB | 150 MB ~ 4 GB |
-| **代码高亮** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐ |
-| **CSS 灵活度** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ❌ |
-| **中文/CJK** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **数学公式** | ⭐⭐⭐⭐ (KaTeX) | ❌ | ⭐⭐⭐⭐⭐ |
-| **图表/Mermaid** | ✅ | ❌ | ❌ |
-| **封面/目录/书签** | ✅ | ⭐ | ✅ |
-| **多主题** | 2 套 | ❌ | 模板定制 |
-| **环境自检** | ✅ | ❌ | ❌ |
-| **页面诊断** | ✅ | ❌ | ❌ |
-| **学习成本** | 零（自然语言） | 低 | 高（需懂 LaTeX） |
+| 维度 | **md2pdf** | [any2pdf](https://skillavatars.com/skills/lovstudio-any2pdf) | [md2pdf (Typst)](https://clawhub.ai/hansschinkenwurst78-dev/skills/openclaw-md2pdf) | [md2pdf-weasyprint](https://skillhub.cn/skills/md2pdf-weasyprint) | [md2pdf-xelatex](https://skillhub.cn/skills/md2pdf-xelatex) |
+|------|:---:|:---:|:---:|:---:|:---:|
+| **引擎** | pandoc + Chromium | reportlab | Pandoc + Typst | WeasyPrint | LaTeX |
+| **本体体积** | < 0.1 MB | < 0.1 MB | < 1 MB | < 1 MB | < 1 MB |
+| **依赖体积** | ~225 MB | ~5 MB（纯 reportlab）<br>~300 MB（含 pandoc+TeX） | ~165 MB | ~80 MB | 150 MB ~ 4 GB |
+| **代码高亮** | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐ |
+| **CSS 灵活度** | ⭐⭐⭐⭐⭐ | ⭐ | ⭐ | ⭐⭐ | ❌ |
+| **中文/CJK** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **数学公式** | ⭐⭐⭐⭐ (KaTeX) | ❌ | ⭐⭐⭐⭐⭐ | ❌ | ⭐⭐⭐⭐⭐ |
+| **图表/Mermaid** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **封面/目录/书签** | ✅ | ✅ | ✅ | ⭐ | ✅ |
+| **多主题** | 2 套 | 12 套 | 模板定制 | ❌ | 模板定制 |
+| **环境自检** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **页面诊断** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **学习成本** | 零（自然语言） | 低 | 低 | 低 | 高（需懂 LaTeX） |
 
 ### 为什么选 Chromium 路线？
 

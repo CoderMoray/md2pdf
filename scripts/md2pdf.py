@@ -403,6 +403,14 @@ document.addEventListener('DOMContentLoaded', function() {{
 
     footer_html = build_footer_html()
 
+    # 计算页面内容区宽度（mm → CSS px，96 DPI: 1mm = 96/25.4 px）
+    page_size_mm = {"A4": (210, 297), "A3": (297, 420),
+                    "Letter": (215.9, 279.4), "Legal": (215.9, 355.6)}
+    pw = page_size_mm.get(page_size or "A4", (210, 297))
+    margin_mm = 20
+    content_width_mm = pw[0] - 2 * margin_mm
+    content_width_px = int(content_width_mm * 96 / 25.4)
+
     # Mermaid 等待逻辑
     mermaid_wait = ""
     if has_mermaid:
@@ -421,12 +429,33 @@ document.addEventListener('DOMContentLoaded', function() {{
     page.wait_for_timeout(500)
 """
 
+    # 宽表缩放 JS
+    table_scale_js = f"""
+    # 宽表自动缩放：检测表格自然宽度，超出页面内容区时等比缩小
+    page.evaluate('''() => {{
+        var contentWidth = {content_width_px};
+        document.querySelectorAll('table').forEach(function(table) {{
+            var wrapper = table.parentElement;
+            // 只处理非封面区域的表格
+            if (table.closest('.md2pdf-cover')) return;
+            var naturalWidth = table.scrollWidth;
+            if (naturalWidth > contentWidth && contentWidth > 0) {{
+                var scale = contentWidth / naturalWidth;
+                table.style.transform = 'scale(' + scale + ')';
+                table.style.transformOrigin = 'top left';
+                table.style.width = naturalWidth + 'px';
+                table.style.marginBottom = '-' + (table.offsetHeight * (1 - scale)).toFixed(0) + 'px';
+            }}
+        }});
+    }}''')
+    page.wait_for_timeout(100)
+"""
+
     code = f"""
 import sys
 from playwright.sync_api import sync_playwright
 html_path = {repr(html_path)}
 pdf_path = {repr(pdf_path)}
-margin = 20  # mm
 with sync_playwright() as p:
     browser = p.chromium.launch()
     page = browser.new_page()
@@ -447,18 +476,16 @@ with sync_playwright() as p:
         var pageHeight = window.innerHeight;
         var h1s = document.querySelectorAll('h1');
         h1s.forEach(function(h1) {{
-            // 跳过封面里的 h1
             if (h1.closest('.md2pdf-cover')) return;
             var rect = h1.getBoundingClientRect();
             var posInPage = rect.top % pageHeight;
             if (posInPage < 0) posInPage += pageHeight;
-            // 如果 H1 在页面 30% 以下的位置（不在页首），另起一页
             if (posInPage > pageHeight * 0.3) {{
                 h1.style.pageBreakBefore = 'always';
             }}
         }});
     }}''')
-    page.wait_for_timeout(100){mermaid_wait}
+    page.wait_for_timeout(100){table_scale_js}{mermaid_wait}
     {'page.wait_for_timeout(300)  # 等待 highlight.js 完成' if has_highlight else ''}
     page.pdf(
         path=pdf_path,
