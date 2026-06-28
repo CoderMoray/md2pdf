@@ -431,18 +431,21 @@ document.addEventListener('DOMContentLoaded', function() {{
 
     # 宽表缩放 JS
     table_scale_js = f"""
-    # 宽表自动缩放：检测表格自然宽度，超出页面内容区时等比缩小
+    # 宽表自动缩放：≥5 列表格等比缩小，避免 A4 页面截断
     page.evaluate('''() => {{
         var contentWidth = {content_width_px};
         document.querySelectorAll('table').forEach(function(table) {{
             if (table.closest('.md2pdf-cover')) return;
-            var naturalWidth = table.scrollWidth;
-            // 5% 容差：避免表格宽度因边框/滚动条略微超标时误触发
-            if (naturalWidth > contentWidth * 1.05 && contentWidth > 0) {{
+            // 按列数判断：5列及以上在 A4 上必然超宽
+            var cols = table.rows[0] ? table.rows[0].cells.length : 0;
+            if (cols >= 5 && contentWidth > 0) {{
+                // 临时去掉 width:100% 测量自然内容宽
+                var origW = table.style.width;
+                table.style.width = 'auto';
+                var naturalWidth = table.scrollWidth;
+                table.style.width = origW;
                 var scale = contentWidth / naturalWidth;
-                // zoom 同时缩放视觉和布局，避免跨页乱序
                 table.style.zoom = scale;
-                // width:auto 让表格取内容自然宽度，margin:0 auto 居中
                 table.style.width = 'auto';
                 table.style.margin = '0 auto';
             }}
