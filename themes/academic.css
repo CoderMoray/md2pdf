@@ -72,6 +72,7 @@ a { color: #1a56db; }
 table {
     border-collapse: collapse;
     width: 100%;
+    table-layout: fixed;
     margin: 14pt 0;
     font-size: 10pt;
     background: #fff;

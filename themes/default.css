@@ -35,7 +35,7 @@ li p { margin: 2px 0; }
 a { color: #007aff; }
 
 /* ── 表格 ── */
-table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; margin: 12px 0; font-size: 13px; }
 th, td { border: 1px solid #d1d1d6; padding: 8px 12px; text-align: left; }
 th { background: #e8e8ed; color: #1d1d1f; font-weight: 600; }
 
