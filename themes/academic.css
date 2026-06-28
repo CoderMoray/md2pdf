@@ -82,11 +82,10 @@ th, td {
     text-align: left;
 }
 th {
-    background: #1a1a1a !important;
-    color: #f5f1eb !important;
+    background: #1a1a1a;
+    color: #f5f1eb;
     font-weight: 700;
 }
-th a, th code { color: #f5f1eb !important; }
 }
 
 /* ── 代码 ── */
