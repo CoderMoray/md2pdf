@@ -437,19 +437,11 @@ document.addEventListener('DOMContentLoaded', function() {{
         document.querySelectorAll('table').forEach(function(table) {{
             if (table.closest('.md2pdf-cover')) return;
             var naturalWidth = table.scrollWidth;
-            if (naturalWidth > contentWidth && contentWidth > 0) {{
+            if (naturalWidth > contentWidth * 1.02 && contentWidth > 0) {{
                 var scale = contentWidth / naturalWidth;
-                var wrapper = document.createElement('div');
-                wrapper.style.width = contentWidth + 'px';
-                wrapper.style.margin = '0 auto';
-                wrapper.style.overflow = 'visible';
-                wrapper.style.height = Math.round(table.offsetHeight * scale) + 'px';
-                table.parentNode.insertBefore(wrapper, table);
-                wrapper.appendChild(table);
-                table.style.width = contentWidth + 'px';
-                table.style.transform = 'scale(' + scale + ')';
-                table.style.transformOrigin = 'top left';
-                table.style.margin = '0';
+                // zoom 同时缩放视觉和布局，避免页面断裂后乱序
+                table.style.zoom = scale;
+                table.style.margin = '0 auto';
             }}
         }});
     }}''')
