@@ -1,0 +1,13 @@
+---
+description: md2pdf 发布流程规则
+alwaysApply: true
+enabled: true
+updatedAt: 2026-06-28T08:17:00.000Z
+provider:
+---
+
+# md2pdf 发布规则
+
+**每次改动后**：直接 `git add` + `git commit`，做本地提交。
+
+**不要自行执行 `bash scripts/release.sh` 发布。** 发布（打 tag、推送到 ClawHub/SkillHub/GitHub Release）必须跟用户确认后才能执行。

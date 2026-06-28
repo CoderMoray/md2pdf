@@ -64,6 +64,9 @@ h1 + p, h2 + p, h3 + p, h4 + p {
 ul, ol { margin: 8pt 0; padding-left: 28pt; }
 li { margin: 4pt 0; line-height: 1.6; }
 
+/* ── 链接 ── */
+a { color: #1a56db; }
+
 /* ── 表格 ── */
 table {
     border-collapse: collapse;

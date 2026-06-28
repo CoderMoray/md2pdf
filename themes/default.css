@@ -30,6 +30,9 @@ ul, ol { margin: 8px 0; padding-left: 24px; }
 li { margin: 6px 0; line-height: 1.7; }
 li p { margin: 2px 0; }
 
+/* ── 链接 ── */
+a { color: #007aff; }
+
 /* ── 表格 ── */
 table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
 th, td { border: 1px solid #d1d1d6; padding: 8px 12px; text-align: left; }
