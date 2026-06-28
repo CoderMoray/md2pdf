@@ -4,6 +4,7 @@
    ============================================================ */
 
 /* ── 基础 ── */
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 body {
     font-family: "Times New Roman", "STSong", "Noto Serif CJK SC", Georgia, serif;
     font-size: 12pt;
@@ -81,9 +82,11 @@ th, td {
     text-align: left;
 }
 th {
-    background: #1a1a1a;
-    color: #f5f1eb;
+    background: #1a1a1a !important;
+    color: #f5f1eb !important;
     font-weight: 700;
+}
+th a, th code { color: #f5f1eb !important; }
 }
 
 /* ── 代码 ── */
