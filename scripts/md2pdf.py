@@ -431,31 +431,13 @@ document.addEventListener('DOMContentLoaded', function() {{
 
     # 宽表缩放 JS
     table_scale_js = f"""
-    # 宽表自动缩放：≥5 列表格等比缩小，避免 A4 页面截断
+    # 宽表自动缩放：≥5 列表格固定 0.85 缩放
     page.evaluate('''() => {{
-        var contentWidth = {content_width_px};
         document.querySelectorAll('table').forEach(function(table) {{
             if (table.closest('.md2pdf-cover')) return;
             var cols = table.rows[0] ? table.rows[0].cells.length : 0;
-            if (cols >= 5 && contentWidth > 0) {{
-                // 放入临时宽容器测量无约束的自然宽度
-                var parent = table.parentNode;
-                var nextSibling = table.nextSibling;
-                var temp = document.createElement('div');
-                temp.style.cssText = 'position:fixed;left:-9999px;width:9999px';
-                document.body.appendChild(temp);
-                temp.appendChild(table);
-                table.style.width = 'auto';
-                var naturalWidth = table.scrollWidth;
-                // 移回原位（保存 nextSibling 防止 DOM 顺序错乱）
-                if (nextSibling) {{
-                    parent.insertBefore(table, nextSibling);
-                }} else {{
-                    parent.appendChild(table);
-                }}
-                temp.remove();
-                var scale = contentWidth / naturalWidth;
-                table.style.zoom = scale;
+            if (cols >= 5) {{
+                table.style.zoom = '0.85';
                 table.style.width = 'auto';
                 table.style.margin = '0 auto';
             }}
