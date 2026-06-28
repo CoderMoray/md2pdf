@@ -81,7 +81,8 @@ th, td {
     text-align: left;
 }
 th {
-    background: #e8e4df;
+    background: #1a1a1a;
+    color: #f5f1eb;
     font-weight: 700;
 }
 
